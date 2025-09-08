@@ -1,0 +1,27 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace TodoListAPI.Models;
+
+public partial class Команды
+{
+    public int IdTeam { get; set; }
+
+    public string? TeamName { get; set; }
+
+    public string? Description { get; set; }
+
+    public string? UserAccess { get; set; }
+
+    public DateTime? CreatedAt { get; set; }
+
+    public string? CratedBy { get; set; }
+
+    public string? EditedAt { get; set; }
+
+    public string? EditedBy { get; set; }
+
+    public string? Notes { get; set; }
+
+    public virtual ICollection<ПользователиКоманды> ПользователиКомандыs { get; set; } = new List<ПользователиКоманды>();
+}
