@@ -11,29 +11,105 @@ public partial class TodoListDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Задачи> Задачиs { get; set; }
+    public virtual DbSet<Command> Commands { get; set; }
 
-    public virtual DbSet<ЗадачиПользователи> ЗадачиПользователиs { get; set; }
+    public virtual DbSet<Project> Projects { get; set; }
 
-    public virtual DbSet<ЗадачиПроекты> ЗадачиПроектыs { get; set; }
+    public virtual DbSet<Status> Statuses { get; set; }
 
-    public virtual DbSet<Команды> Командыs { get; set; }
+    public virtual DbSet<Task> Tasks { get; set; }
 
-    public virtual DbSet<Пользователи> Пользователиs { get; set; }
+    public virtual DbSet<TasksProject> TasksProjects { get; set; }
 
-    public virtual DbSet<ПользователиКоманды> ПользователиКомандыs { get; set; }
+    public virtual DbSet<TasksUser> TasksUsers { get; set; }
 
-    public virtual DbSet<Проекты> Проектыs { get; set; }
+    public virtual DbSet<User> Users { get; set; }
 
-    public virtual DbSet<Статус> Статусs { get; set; }
+    public virtual DbSet<UsersCommand> UsersCommands { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Задачи>(entity =>
+        modelBuilder.Entity<Command>(entity =>
         {
-            entity.HasKey(e => e.IdTask);
+            entity.HasKey(e => e.IdTeam).HasName("PK_Команды");
 
-            entity.ToTable("Задачи");
+            entity.Property(e => e.IdTeam).HasColumnName("id_team");
+            entity.Property(e => e.CratedBy)
+                .HasMaxLength(255)
+                .HasColumnName("crated_by");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.EditedAt)
+                .HasMaxLength(255)
+                .HasColumnName("edited_at");
+            entity.Property(e => e.EditedBy)
+                .HasMaxLength(255)
+                .HasColumnName("edited_by");
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.TeamName)
+                .HasMaxLength(255)
+                .HasColumnName("team_name");
+            entity.Property(e => e.UserAccess)
+                .HasMaxLength(255)
+                .HasColumnName("user_access");
+        });
+
+        modelBuilder.Entity<Project>(entity =>
+        {
+            entity.HasKey(e => e.IdProject).HasName("PK_Проекты");
+
+            entity.Property(e => e.IdProject).HasColumnName("id_project");
+            entity.Property(e => e.CreatedAt)
+                .HasMaxLength(10)
+                .IsFixedLength()
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(10)
+                .IsFixedLength()
+                .HasColumnName("created_by");
+            entity.Property(e => e.Descryption).HasColumnName("descryption");
+            entity.Property(e => e.EditedAt)
+                .HasMaxLength(10)
+                .IsFixedLength()
+                .HasColumnName("edited_at");
+            entity.Property(e => e.EditedBy)
+                .HasMaxLength(10)
+                .IsFixedLength()
+                .HasColumnName("edited_by");
+            entity.Property(e => e.EndDate)
+                .HasColumnType("datetime")
+                .HasColumnName("end_date");
+            entity.Property(e => e.IdTeam).HasColumnName("id_team");
+            entity.Property(e => e.Notes)
+                .HasMaxLength(10)
+                .IsFixedLength()
+                .HasColumnName("notes");
+            entity.Property(e => e.ProjectName)
+                .HasMaxLength(255)
+                .HasColumnName("project_name");
+            entity.Property(e => e.ProjectType)
+                .HasMaxLength(255)
+                .HasColumnName("project_type");
+            entity.Property(e => e.StartDate)
+                .HasColumnType("datetime")
+                .HasColumnName("start_date");
+        });
+
+        modelBuilder.Entity<Status>(entity =>
+        {
+            entity.HasKey(e => e.IdStatus).HasName("PK_Статус");
+
+            entity.ToTable("Status");
+
+            entity.Property(e => e.IdStatus).HasColumnName("id-status");
+            entity.Property(e => e.Название).HasMaxLength(255);
+        });
+
+        modelBuilder.Entity<Task>(entity =>
+        {
+            entity.HasKey(e => e.IdTask).HasName("PK_Задачи");
 
             entity.Property(e => e.IdTask).HasColumnName("id_task");
             entity.Property(e => e.CompleteDate)
@@ -71,11 +147,32 @@ public partial class TodoListDbContext : DbContext
                 .HasColumnName("task_name");
         });
 
-        modelBuilder.Entity<ЗадачиПользователи>(entity =>
+        modelBuilder.Entity<TasksProject>(entity =>
         {
-            entity.HasKey(e => e.IdAssignees);
+            entity.HasKey(e => e.Id).HasName("PK_ЗадачаПроект");
 
-            entity.ToTable("Задачи - Пользователи");
+            entity.ToTable("Tasks - Projects");
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.IdЗадача).HasColumnName("ID_Задача");
+            entity.Property(e => e.IdПроект).HasColumnName("ID_Проект");
+
+            entity.HasOne(d => d.IdЗадачаNavigation).WithMany(p => p.TasksProjects)
+                .HasForeignKey(d => d.IdЗадача)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Задачи - Проекты_Задачи");
+
+            entity.HasOne(d => d.IdПроектNavigation).WithMany(p => p.TasksProjects)
+                .HasForeignKey(d => d.IdПроект)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Задачи - Проекты_Проекты");
+        });
+
+        modelBuilder.Entity<TasksUser>(entity =>
+        {
+            entity.HasKey(e => e.IdAssignees).HasName("PK_Задачи - Пользователи");
+
+            entity.ToTable("Tasks - Users");
 
             entity.Property(e => e.IdAssignees)
                 .HasMaxLength(255)
@@ -83,72 +180,20 @@ public partial class TodoListDbContext : DbContext
             entity.Property(e => e.IdTask).HasColumnName("id_task");
             entity.Property(e => e.IdUser).HasColumnName("id_user");
 
-            entity.HasOne(d => d.IdTaskNavigation).WithMany(p => p.ЗадачиПользователиs)
+            entity.HasOne(d => d.IdTaskNavigation).WithMany(p => p.TasksUsers)
                 .HasForeignKey(d => d.IdTask)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Задачи - Пользователи_Задачи");
 
-            entity.HasOne(d => d.IdUserNavigation).WithMany(p => p.ЗадачиПользователиs)
+            entity.HasOne(d => d.IdUserNavigation).WithMany(p => p.TasksUsers)
                 .HasForeignKey(d => d.IdUser)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Задачи - Пользователи_Пользователи");
         });
 
-        modelBuilder.Entity<ЗадачиПроекты>(entity =>
+        modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK_ЗадачаПроект");
-
-            entity.ToTable("Задачи - Проекты");
-
-            entity.Property(e => e.Id).HasColumnName("ID");
-            entity.Property(e => e.IdЗадача).HasColumnName("ID_Задача");
-            entity.Property(e => e.IdПроект).HasColumnName("ID_Проект");
-
-            entity.HasOne(d => d.IdЗадачаNavigation).WithMany(p => p.ЗадачиПроектыs)
-                .HasForeignKey(d => d.IdЗадача)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Задачи - Проекты_Задачи");
-
-            entity.HasOne(d => d.IdПроектNavigation).WithMany(p => p.ЗадачиПроектыs)
-                .HasForeignKey(d => d.IdПроект)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Задачи - Проекты_Проекты");
-        });
-
-        modelBuilder.Entity<Команды>(entity =>
-        {
-            entity.HasKey(e => e.IdTeam);
-
-            entity.ToTable("Команды");
-
-            entity.Property(e => e.IdTeam).HasColumnName("id_team");
-            entity.Property(e => e.CratedBy)
-                .HasMaxLength(255)
-                .HasColumnName("crated_by");
-            entity.Property(e => e.CreatedAt)
-                .HasColumnType("datetime")
-                .HasColumnName("created_at");
-            entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.EditedAt)
-                .HasMaxLength(255)
-                .HasColumnName("edited_at");
-            entity.Property(e => e.EditedBy)
-                .HasMaxLength(255)
-                .HasColumnName("edited_by");
-            entity.Property(e => e.Notes).HasColumnName("notes");
-            entity.Property(e => e.TeamName)
-                .HasMaxLength(255)
-                .HasColumnName("team_name");
-            entity.Property(e => e.UserAccess)
-                .HasMaxLength(255)
-                .HasColumnName("user_access");
-        });
-
-        modelBuilder.Entity<Пользователи>(entity =>
-        {
-            entity.HasKey(e => e.IdUser);
-
-            entity.ToTable("Пользователи");
+            entity.HasKey(e => e.IdUser).HasName("PK_Пользователи");
 
             entity.Property(e => e.IdUser).HasColumnName("id_user");
             entity.Property(e => e.CreatedAt)
@@ -188,83 +233,30 @@ public partial class TodoListDbContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("second_name");
 
-            entity.HasOne(d => d.IdUserStatusNavigation).WithMany(p => p.Пользователиs)
+            entity.HasOne(d => d.IdUserStatusNavigation).WithMany(p => p.Users)
                 .HasForeignKey(d => d.IdUserStatus)
                 .HasConstraintName("FK_Пользователи_Статус");
         });
 
-        modelBuilder.Entity<ПользователиКоманды>(entity =>
+        modelBuilder.Entity<UsersCommand>(entity =>
         {
-            entity.HasKey(e => e.IdConnection);
+            entity.HasKey(e => e.IdConnection).HasName("PK_Пользователи - Команды");
 
-            entity.ToTable("Пользователи - Команды");
+            entity.ToTable("Users - Commands");
 
             entity.Property(e => e.IdConnection).HasColumnName("id_connection");
             entity.Property(e => e.IdTeam).HasColumnName("id_team");
             entity.Property(e => e.IdUser).HasColumnName("id_user");
 
-            entity.HasOne(d => d.IdTeamNavigation).WithMany(p => p.ПользователиКомандыs)
+            entity.HasOne(d => d.IdTeamNavigation).WithMany(p => p.UsersCommands)
                 .HasForeignKey(d => d.IdTeam)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Пользователи - Команды_Команды");
 
-            entity.HasOne(d => d.IdUserNavigation).WithMany(p => p.ПользователиКомандыs)
+            entity.HasOne(d => d.IdUserNavigation).WithMany(p => p.UsersCommands)
                 .HasForeignKey(d => d.IdUser)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Пользователи - Команды_Пользователи");
-        });
-
-        modelBuilder.Entity<Проекты>(entity =>
-        {
-            entity.HasKey(e => e.IdProject);
-
-            entity.ToTable("Проекты");
-
-            entity.Property(e => e.IdProject).HasColumnName("id_project");
-            entity.Property(e => e.CreatedAt)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("created_at");
-            entity.Property(e => e.CreatedBy)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("created_by");
-            entity.Property(e => e.Descryption).HasColumnName("descryption");
-            entity.Property(e => e.EditedAt)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("edited_at");
-            entity.Property(e => e.EditedBy)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("edited_by");
-            entity.Property(e => e.EndDate)
-                .HasColumnType("datetime")
-                .HasColumnName("end_date");
-            entity.Property(e => e.IdTeam).HasColumnName("id_team");
-            entity.Property(e => e.Notes)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("notes");
-            entity.Property(e => e.ProjectName)
-                .HasMaxLength(255)
-                .HasColumnName("project_name");
-            entity.Property(e => e.ProjectType)
-                .HasMaxLength(255)
-                .HasColumnName("project_type");
-            entity.Property(e => e.StartDate)
-                .HasColumnType("datetime")
-                .HasColumnName("start_date");
-        });
-
-        modelBuilder.Entity<Статус>(entity =>
-        {
-            entity.HasKey(e => e.IdStatus);
-
-            entity.ToTable("Статус");
-
-            entity.Property(e => e.IdStatus).HasColumnName("id-status");
-            entity.Property(e => e.Название).HasMaxLength(255);
         });
 
         OnModelCreatingPartial(modelBuilder);

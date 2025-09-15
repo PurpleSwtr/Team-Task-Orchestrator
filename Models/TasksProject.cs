@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TodoListAPI.Models;
 
-public partial class ЗадачиПроекты
+public partial class TasksProject
 {
     public int Id { get; set; }
 
@@ -11,7 +11,7 @@ public partial class ЗадачиПроекты
 
     public int IdПроект { get; set; }
 
-    public virtual Задачи IdЗадачаNavigation { get; set; } = null!;
+    public virtual Task IdЗадачаNavigation { get; set; } = null!;
 
-    public virtual Проекты IdПроектNavigation { get; set; } = null!;
+    public virtual Project IdПроектNavigation { get; set; } = null!;
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TodoListAPI.Models;
 
-public partial class Проекты
+public partial class Project
 {
     public int IdProject { get; set; }
 
@@ -28,6 +28,6 @@ public partial class Проекты
     public string? EditedAt { get; set; }
 
     public string? Notes { get; set; }
-
-    public virtual ICollection<ЗадачиПроекты> ЗадачиПроектыs { get; set; } = new List<ЗадачиПроекты>();
+    
+    public virtual ICollection<TasksProject> TasksProjects { get; set; } = new List<TasksProject>();
 }

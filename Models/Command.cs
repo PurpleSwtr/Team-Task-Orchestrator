@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TodoListAPI.Models;
 
-public partial class Команды
+public partial class Command
 {
     public int IdTeam { get; set; }
 
@@ -23,5 +23,5 @@ public partial class Команды
 
     public string? Notes { get; set; }
 
-    public virtual ICollection<ПользователиКоманды> ПользователиКомандыs { get; set; } = new List<ПользователиКоманды>();
+    public virtual ICollection<UsersCommand> UsersCommands { get; set; } = new List<UsersCommand>();
 }

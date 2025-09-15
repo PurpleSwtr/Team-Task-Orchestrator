@@ -7,53 +7,51 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TodoListAPI.Models;
 
-using Task = TodoListAPI.Models.Task;
-
 namespace TodoListAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TasksController : ControllerBase
+    public class ProjectsController : ControllerBase
     {
         private readonly TodoListDbContext _context;
 
-        public TasksController(TodoListDbContext context)
+        public ProjectsController(TodoListDbContext context)
         {
             _context = context;
         }
 
-        // GET: api/Tasks
+        // GET: api/Projects
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Task>>> GetTasks()
+        public async Task<ActionResult<IEnumerable<Project>>> GetProjects()
         {
-            return await _context.Tasks.ToListAsync();
+            return await _context.Projects.ToListAsync();
         }
 
-        // GET: api/Tasks/5
+        // GET: api/Projects/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Task>> GetTask(int id)
+        public async Task<ActionResult<Project>> GetProject(int id)
         {
-            var task = await _context.Tasks.FindAsync(id);
+            var project = await _context.Projects.FindAsync(id);
 
-            if (task == null)
+            if (project == null)
             {
                 return NotFound();
             }
 
-            return task;
+            return project;
         }
 
-        // PUT: api/Tasks/5
+        // PUT: api/Projects/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTask(int id, Task task)
+        public async Task<IActionResult> PutProject(int id, Project project)
         {
-            if (id != task.IdTask)
+            if (id != project.IdProject)
             {
                 return BadRequest();
             }
 
-            _context.Entry(task).State = EntityState.Modified;
+            _context.Entry(project).State = EntityState.Modified;
 
             try
             {
@@ -61,7 +59,7 @@ namespace TodoListAPI.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!TaskExists(id))
+                if (!ProjectExists(id))
                 {
                     return NotFound();
                 }
@@ -74,36 +72,36 @@ namespace TodoListAPI.Controllers
             return NoContent();
         }
 
-        // POST: api/Tasks
+        // POST: api/Projects
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Task>> PostTask(Task task)
+        public async Task<ActionResult<Project>> PostProject(Project project)
         {
-            _context.Tasks.Add(task);
+            _context.Projects.Add(project);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetTask", new { id = task.IdTask }, task);
+            return CreatedAtAction("GetProject", new { id = project.IdProject }, project);
         }
 
-        // DELETE: api/Tasks/5
+        // DELETE: api/Projects/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTask(int id)
+        public async Task<IActionResult> DeleteProject(int id)
         {
-            var task = await _context.Tasks.FindAsync(id);
-            if (task == null)
+            var project = await _context.Projects.FindAsync(id);
+            if (project == null)
             {
                 return NotFound();
             }
 
-            _context.Tasks.Remove(task);
+            _context.Projects.Remove(project);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool TaskExists(int id)
+        private bool ProjectExists(int id)
         {
-            return _context.Tasks.Any(e => e.IdTask == id);
+            return _context.Projects.Any(e => e.IdProject == id);
         }
     }
 }

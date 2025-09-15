@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TodoListAPI.Models;
 
-public partial class Задачи
+public partial class Task
 {
     public int IdTask { get; set; }
 
@@ -31,7 +31,7 @@ public partial class Задачи
 
     public string? Notes { get; set; }
 
-    public virtual ICollection<ЗадачиПользователи> ЗадачиПользователиs { get; set; } = new List<ЗадачиПользователи>();
+    public virtual ICollection<TasksProject> TasksProjects { get; set; } = new List<TasksProject>();
 
-    public virtual ICollection<ЗадачиПроекты> ЗадачиПроектыs { get; set; } = new List<ЗадачиПроекты>();
+    public virtual ICollection<TasksUser> TasksUsers { get; set; } = new List<TasksUser>();
 }
