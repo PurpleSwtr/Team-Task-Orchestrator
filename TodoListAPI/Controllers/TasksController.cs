@@ -9,6 +9,7 @@ using TodoListAPI.Models;
 
 using Task = TodoListAPI.Models.Task;
 
+
 namespace TodoListAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -97,6 +98,7 @@ namespace TodoListAPI.Controllers
 
             _context.Tasks.Remove(task);
             await _context.SaveChangesAsync();
+            
 
             return NoContent();
         }

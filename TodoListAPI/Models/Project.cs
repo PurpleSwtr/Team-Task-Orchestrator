@@ -28,6 +28,6 @@ public partial class Project
     public string? EditedAt { get; set; }
 
     public string? Notes { get; set; }
-    
+
     public virtual ICollection<TasksProject> TasksProjects { get; set; } = new List<TasksProject>();
 }

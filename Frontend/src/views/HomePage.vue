@@ -1,12 +1,17 @@
 <template>
-  <div class="bg-blue-500 text-white p-4 rounded-lg shadow-md">
-    <h1 class="text-2xl font-bold mb-2">Hello, Tailwind CSS with Vue!</h1>
-    <button class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-      Click Me
-    </button>
-  </div>
+  <CardTask 
+    :tittle = "tittle"
+    :task = "task"/>
 </template>
 
-<script></script>
+<script setup>
+import { ref } from 'vue'
+import CardTask from '@/components/CardTask.vue'
 
-<style></style>
+// 3. Объявляем переменные, чтобы Vue их "увидел"
+const tittle = ref("Мое первое задание");
+const task = ref("Нужно сделать X и Y.");
+</script>
+
+<style>
+</style>

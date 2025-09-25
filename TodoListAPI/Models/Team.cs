@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TodoListAPI.Models;
 
-public partial class Command
+public partial class Team
 {
     public int IdTeam { get; set; }
 

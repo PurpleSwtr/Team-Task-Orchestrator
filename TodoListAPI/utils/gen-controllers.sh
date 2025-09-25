@@ -1,3 +1,5 @@
+cd TodoListAPI
+
 models=("Project" "User" "Command" "Status" "Task")
 
 for model in "${models[@]}"; do

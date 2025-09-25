@@ -11,7 +11,7 @@ public partial class UsersCommand
 
     public int IdTeam { get; set; }
 
-    public virtual Command IdTeamNavigation { get; set; } = null!;
+    public virtual Team IdTeamNavigation { get; set; } = null!;
 
     public virtual User IdUserNavigation { get; set; } = null!;
 }
