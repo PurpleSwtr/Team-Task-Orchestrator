@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TodoListAPI.Models;
-
+using Microsoft.AspNetCore.Authorization;
 using Task = TodoListAPI.Models.Task;
 
 
@@ -14,6 +14,7 @@ namespace TodoListAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class TasksController : ControllerBase
     {
         private readonly TodoListDbContext _context;

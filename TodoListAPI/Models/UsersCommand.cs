@@ -3,15 +3,12 @@ using System.Collections.Generic;
 
 namespace TodoListAPI.Models;
 
+// Models/UsersCommand.cs
 public partial class UsersCommand
 {
     public int IdConnection { get; set; }
-
-    public int IdUser { get; set; }
-
+    public string IdUser { get; set; } // <--- ИЗМЕНИТЬ НА STRING
     public int IdTeam { get; set; }
-
     public virtual Team IdTeamNavigation { get; set; } = null!;
-
-    public virtual User IdUserNavigation { get; set; } = null!;
+    public virtual ApplicationUser IdUserNavigation { get; set; } = null!; // <--- ИЗМЕНИТЬ НА ApplicationUser
 }

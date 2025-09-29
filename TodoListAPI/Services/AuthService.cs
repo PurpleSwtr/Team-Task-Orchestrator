@@ -1,0 +1,65 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
+using TodoListAPI.Models; // Важно, чтобы была ссылка на ApplicationUser
+
+namespace TodoListAPI.Services
+{
+    public class AuthService : IAuthService
+    {
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IConfiguration _configuration;
+
+        // Внедряем UserManager для работы с пользователями и IConfiguration для доступа к секретному ключу
+        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        {
+            _userManager = userManager;
+            _configuration = configuration;
+        }
+
+        public async Task<IdentityResult> RegisterUserAsync(string email, string password)
+        {
+            var user = new ApplicationUser { UserName = email, Email = email };
+            var result = await _userManager.CreateAsync(user, password);
+            return result;
+        }
+
+        public async Task<string> LoginUserAsync(string email, string password)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null && await _userManager.CheckPasswordAsync(user, password))
+            {
+                // Логин и пароль верные, генерируем JWT токен
+                return GenerateJwtToken(user);
+            }
+
+            // Если что-то не так, возвращаем null
+            return null;
+        }
+
+        private string GenerateJwtToken(ApplicationUser user)
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(120),
+                signingCredentials: credentials);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+    }
+}

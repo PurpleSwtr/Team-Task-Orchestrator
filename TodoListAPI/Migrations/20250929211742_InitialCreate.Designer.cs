@@ -12,8 +12,8 @@ using TodoListAPI.Models;
 namespace TodoListAPI.Migrations
 {
     [DbContext(typeof(TodoListDbContext))]
-    [Migration("20250929200425_AddIdentityTables")]
-    partial class AddIdentityTables
+    [Migration("20250929211742_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -177,6 +177,15 @@ namespace TodoListAPI.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("IdUserStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("IdUserStatusNavigationIdStatus")
+                        .HasColumnType("int");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
@@ -191,7 +200,13 @@ namespace TodoListAPI.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PatronymicName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
@@ -199,6 +214,12 @@ namespace TodoListAPI.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime?>("RegistrationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SecondName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -211,6 +232,8 @@ namespace TodoListAPI.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IdUserStatusNavigationIdStatus");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -421,8 +444,9 @@ namespace TodoListAPI.Migrations
                         .HasColumnType("int")
                         .HasColumnName("id_task");
 
-                    b.Property<int>("IdUser")
-                        .HasColumnType("int")
+                    b.Property<string>("IdUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("id_user");
 
                     b.HasKey("IdAssignees")
@@ -487,81 +511,6 @@ namespace TodoListAPI.Migrations
                     b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("TodoListAPI.Models.User", b =>
-                {
-                    b.Property<int>("IdUser")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id_user");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUser"));
-
-                    b.Property<string>("CreatedAt")
-                        .HasMaxLength(10)
-                        .HasColumnType("nchar(10)")
-                        .HasColumnName("created_at")
-                        .IsFixedLength();
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(10)
-                        .HasColumnType("nchar(10)")
-                        .HasColumnName("created_by")
-                        .IsFixedLength();
-
-                    b.Property<string>("EditedAt")
-                        .HasMaxLength(10)
-                        .HasColumnType("nchar(10)")
-                        .HasColumnName("edited_at")
-                        .IsFixedLength();
-
-                    b.Property<string>("EditedBy")
-                        .HasMaxLength(10)
-                        .HasColumnType("nchar(10)")
-                        .HasColumnName("edited_by")
-                        .IsFixedLength();
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("email");
-
-                    b.Property<string>("FirstName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("first_name");
-
-                    b.Property<int?>("IdUserStatus")
-                        .HasColumnType("int")
-                        .HasColumnName("id_user_status");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(10)
-                        .HasColumnType("nchar(10)")
-                        .HasColumnName("notes")
-                        .IsFixedLength();
-
-                    b.Property<string>("PatronymicName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("patronymic_name");
-
-                    b.Property<DateTime?>("RegistrationTime")
-                        .HasColumnType("datetime")
-                        .HasColumnName("registration_time");
-
-                    b.Property<string>("SecondName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("second_name");
-
-                    b.HasKey("IdUser")
-                        .HasName("PK_Пользователи");
-
-                    b.HasIndex("IdUserStatus");
-
-                    b.ToTable("Users");
-                });
-
             modelBuilder.Entity("TodoListAPI.Models.UsersCommand", b =>
                 {
                     b.Property<int>("IdConnection")
@@ -575,8 +524,9 @@ namespace TodoListAPI.Migrations
                         .HasColumnType("int")
                         .HasColumnName("id_team");
 
-                    b.Property<int>("IdUser")
-                        .HasColumnType("int")
+                    b.Property<string>("IdUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("id_user");
 
                     b.HasKey("IdConnection")
@@ -640,6 +590,15 @@ namespace TodoListAPI.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TodoListAPI.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("TodoListAPI.Models.Status", "IdUserStatusNavigation")
+                        .WithMany("Users")
+                        .HasForeignKey("IdUserStatusNavigationIdStatus");
+
+                    b.Navigation("IdUserStatusNavigation");
+                });
+
             modelBuilder.Entity("TodoListAPI.Models.TasksProject", b =>
                 {
                     b.HasOne("TodoListAPI.Models.Project", "IdProjectNavigation")
@@ -667,7 +626,7 @@ namespace TodoListAPI.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Задачи - Пользователи_Задачи");
 
-                    b.HasOne("TodoListAPI.Models.User", "IdUserNavigation")
+                    b.HasOne("TodoListAPI.Models.ApplicationUser", "IdUserNavigation")
                         .WithMany("TasksUsers")
                         .HasForeignKey("IdUser")
                         .IsRequired()
@@ -678,16 +637,6 @@ namespace TodoListAPI.Migrations
                     b.Navigation("IdUserNavigation");
                 });
 
-            modelBuilder.Entity("TodoListAPI.Models.User", b =>
-                {
-                    b.HasOne("TodoListAPI.Models.Status", "IdUserStatusNavigation")
-                        .WithMany("Users")
-                        .HasForeignKey("IdUserStatus")
-                        .HasConstraintName("FK_Пользователи_Статус");
-
-                    b.Navigation("IdUserStatusNavigation");
-                });
-
             modelBuilder.Entity("TodoListAPI.Models.UsersCommand", b =>
                 {
                     b.HasOne("TodoListAPI.Models.Team", "IdTeamNavigation")
@@ -696,7 +645,7 @@ namespace TodoListAPI.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Пользователи - Команды_Команды");
 
-                    b.HasOne("TodoListAPI.Models.User", "IdUserNavigation")
+                    b.HasOne("TodoListAPI.Models.ApplicationUser", "IdUserNavigation")
                         .WithMany("UsersCommands")
                         .HasForeignKey("IdUser")
                         .IsRequired()
@@ -705,6 +654,13 @@ namespace TodoListAPI.Migrations
                     b.Navigation("IdTeamNavigation");
 
                     b.Navigation("IdUserNavigation");
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("TasksUsers");
+
+                    b.Navigation("UsersCommands");
                 });
 
             modelBuilder.Entity("TodoListAPI.Models.Project", b =>
@@ -726,13 +682,6 @@ namespace TodoListAPI.Migrations
 
             modelBuilder.Entity("TodoListAPI.Models.Team", b =>
                 {
-                    b.Navigation("UsersCommands");
-                });
-
-            modelBuilder.Entity("TodoListAPI.Models.User", b =>
-                {
-                    b.Navigation("TasksUsers");
-
                     b.Navigation("UsersCommands");
                 });
 #pragma warning restore 612, 618

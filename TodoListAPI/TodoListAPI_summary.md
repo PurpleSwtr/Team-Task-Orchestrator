@@ -491,20 +491,48 @@ $RECYCLE.BIN/
 using TodoListAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using TodoListAPI.Services; // <-- Добавляем using для сервисов
+using Microsoft.AspNetCore.Authentication.JwtBearer; // <-- Добавляем using для JWT
+using Microsoft.IdentityModel.Tokens; // <-- Добавляем using для токенов
+using System.Text; // <-- Добавляем using для кодировки
 
 var builder = WebApplication.CreateBuilder(args);
+var configuration = builder.Configuration; // <-- Получаем доступ к конфигурации
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<TodoListDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Добавляем сервисы авторизации
-builder.Services.AddAuthorization();
+// Настраиваем Identity
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>() // <-- Можно добавить IdentityRole, если нужны роли
+    .AddEntityFrameworkStores<TodoListDbContext>()
+    .AddDefaultTokenProviders();
 
-// Добавляем Identity и эндпоинты для API
-builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
-    .AddEntityFrameworkStores<TodoListDbContext>();
+// === НАСТРОЙКА JWT АУТЕНТИФИКАЦИИ ===
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.SaveToken = true;
+    options.RequireHttpsMetadata = false;
+    options.TokenValidationParameters = new TokenValidationParameters()
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidAudience = configuration["Jwt:Audience"],
+        ValidIssuer = configuration["Jwt:Issuer"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
+    };
+});
+// ===================================
+
+// Регистрируем наш сервис
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -518,9 +546,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Добавляем эндпоинты Identity (например, /register, /login)
-app.MapIdentityApi<ApplicationUser>();
-
+// Включаем аутентификацию и авторизацию. Порядок важен!
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
@@ -542,6 +569,7 @@ app.Run();
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.20" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.20">
@@ -621,6 +649,11 @@ EndGlobal
       "Microsoft.AspNetCore": "Warning"
     }
   },
+  "Jwt": {
+    "Key": "qps3kHGw-vrq2mlZg-08AMVoW0-eFO137LE",
+    "Issuer": "http://localhost:5023",
+    "Audience": "http://localhost:5023"
+  },
   "AllowedHosts": "*"
 }
 ```
@@ -659,6 +692,57 @@ EndGlobal
 
 ---
 
+### 📄 `Controllers/AuthController.cs`
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+using TodoListAPI.Services; // <-- Используем наш сервис
+
+namespace TodoListAPI.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class AuthController : ControllerBase
+    {
+        private readonly IAuthService _authService;
+
+        public AuthController(IAuthService authService)
+        {
+            _authService = authService;
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(string email, string password)
+        {
+            var result = await _authService.RegisterUserAsync(email, password);
+
+            if (result.Succeeded)
+            {
+                return Ok(new { Message = "User created successfully!" });
+            }
+
+            return BadRequest(result.Errors);
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(string email, string password)
+        {
+            var token = await _authService.LoginUserAsync(email, password);
+
+            if (token != null)
+            {
+                return Ok(new { Token = token });
+            }
+
+            return Unauthorized(new { Message = "Invalid credentials" });
+        }
+    }
+}
+```
+
+---
+
 ### 📄 `Controllers/ProjectsController.cs`
 
 ```csharp
@@ -670,11 +754,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TodoListAPI.Models;
-
+using Microsoft.AspNetCore.Authorization;
 namespace TodoListAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProjectsController : ControllerBase
     {
         private readonly TodoListDbContext _context;
@@ -784,11 +869,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TodoListAPI.Models;
-
+using Microsoft.AspNetCore.Authorization;
 namespace TodoListAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class StatussController : ControllerBase
     {
         private readonly TodoListDbContext _context;
@@ -898,7 +984,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TodoListAPI.Models;
-
+using Microsoft.AspNetCore.Authorization;
 using Task = TodoListAPI.Models.Task;
 
 
@@ -906,6 +992,7 @@ namespace TodoListAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class TasksController : ControllerBase
     {
         private readonly TodoListDbContext _context;
@@ -1008,16 +1095,14 @@ namespace TodoListAPI.Controllers
 ### 📄 `Controllers/UsersController.cs`
 
 ```csharp
-using System;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
+using TodoListAPI.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TodoListAPI.Models;
-using Microsoft.AspNetCore.Authorization; // <-- Добавьте это
-
 
 namespace TodoListAPI.Controllers
 {
@@ -1026,96 +1111,40 @@ namespace TodoListAPI.Controllers
     [Authorize]
     public class UsersController : ControllerBase
     {
-        private readonly TodoListDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public UsersController(TodoListDbContext context)
+        public UsersController(UserManager<ApplicationUser> userManager)
         {
-            _context = context;
+            _userManager = userManager;
         }
 
         // GET: api/Users
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<ApplicationUser>>> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            // Получаем пользователей через UserManager
+            var users = await _userManager.Users.ToListAsync();
+            return Ok(users);
         }
 
         // GET: api/Users/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<ActionResult<ApplicationUser>> GetUser(string id) // ID теперь строка
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _userManager.FindByIdAsync(id);
 
             if (user == null)
             {
                 return NotFound();
             }
 
-            return user;
+            return Ok(user);
         }
 
-        // PUT: api/Users/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, User user)
-        {
-            if (id != user.IdUser)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(user).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Users
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
-        {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetUser", new { id = user.IdUser }, user);
-        }
-
-        // DELETE: api/Users/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool UserExists(int id)
-        {
-            return _context.Users.Any(e => e.IdUser == id);
-        }
+        // Примечание: Логика создания (POST), обновления (PUT) и удаления (DELETE)
+        // пользователей Identity сложнее и выполняется через методы UserManager,
+        // (например, CreateAsync, UpdateAsync, DeleteAsync), а не напрямую через DbContext.
+        // Этот базовый код для чтения данных теперь корректен.
     }
 }
 ```
@@ -1925,85 +1954,85 @@ namespace TodoListAPI.Migrations
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "Projects",
-                columns: table => new
-                {
-                    id_project = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    id_team = table.Column<int>(type: "int", nullable: true),
-                    project_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    project_type = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    descryption = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    start_date = table.Column<DateTime>(type: "datetime", nullable: true),
-                    end_date = table.Column<DateTime>(type: "datetime", nullable: true),
-                    created_by = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
-                    created_at = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
-                    edited_by = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
-                    edited_at = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
-                    notes = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Проекты", x => x.id_project);
-                });
+            // migrationBuilder.CreateTable(
+            //     name: "Projects",
+            //     columns: table => new
+            //     {
+            //         id_project = table.Column<int>(type: "int", nullable: false)
+            //             .Annotation("SqlServer:Identity", "1, 1"),
+            //         id_team = table.Column<int>(type: "int", nullable: true),
+            //         project_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         project_type = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         descryption = table.Column<string>(type: "nvarchar(max)", nullable: true),
+            //         start_date = table.Column<DateTime>(type: "datetime", nullable: true),
+            //         end_date = table.Column<DateTime>(type: "datetime", nullable: true),
+            //         created_by = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
+            //         created_at = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
+            //         edited_by = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
+            //         edited_at = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
+            //         notes = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true)
+            //     },
+            //     constraints: table =>
+            //     {
+            //         table.PrimaryKey("PK_Проекты", x => x.id_project);
+            //     });
 
-            migrationBuilder.CreateTable(
-                name: "Status",
-                columns: table => new
-                {
-                    idstatus = table.Column<int>(name: "id-status", type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Название = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Статус", x => x.idstatus);
-                });
+            // migrationBuilder.CreateTable(
+            //     name: "Status",
+            //     columns: table => new
+            //     {
+            //         idstatus = table.Column<int>(name: "id-status", type: "int", nullable: false)
+            //             .Annotation("SqlServer:Identity", "1, 1"),
+            //         Название = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
+            //     },
+            //     constraints: table =>
+            //     {
+            //         table.PrimaryKey("PK_Статус", x => x.idstatus);
+            //     });
 
-            migrationBuilder.CreateTable(
-                name: "Tasks",
-                columns: table => new
-                {
-                    id_task = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    task_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    description = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    status = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    priority = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    created_by = table.Column<int>(type: "int", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime", nullable: true),
-                    deadline_date = table.Column<DateTime>(type: "datetime", nullable: true),
-                    complete_date = table.Column<DateTime>(type: "datetime", nullable: true),
-                    id_project = table.Column<int>(type: "int", nullable: true),
-                    edited_by = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    edited_at = table.Column<DateTime>(type: "datetime", nullable: true),
-                    notes = table.Column<string>(type: "nchar(50)", fixedLength: true, maxLength: 50, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Задачи", x => x.id_task);
-                });
+            // migrationBuilder.CreateTable(
+            //     name: "Tasks",
+            //     columns: table => new
+            //     {
+            //         id_task = table.Column<int>(type: "int", nullable: false)
+            //             .Annotation("SqlServer:Identity", "1, 1"),
+            //         task_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         description = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         status = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         priority = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         created_by = table.Column<int>(type: "int", nullable: true),
+            //         created_at = table.Column<DateTime>(type: "datetime", nullable: true),
+            //         deadline_date = table.Column<DateTime>(type: "datetime", nullable: true),
+            //         complete_date = table.Column<DateTime>(type: "datetime", nullable: true),
+            //         id_project = table.Column<int>(type: "int", nullable: true),
+            //         edited_by = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+            //         edited_at = table.Column<DateTime>(type: "datetime", nullable: true),
+            //         notes = table.Column<string>(type: "nchar(50)", fixedLength: true, maxLength: 50, nullable: true)
+            //     },
+            //     constraints: table =>
+            //     {
+            //         table.PrimaryKey("PK_Задачи", x => x.id_task);
+            //     });
 
-            migrationBuilder.CreateTable(
-                name: "Teams",
-                columns: table => new
-                {
-                    id_team = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    team_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    user_access = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime", nullable: true),
-                    crated_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    edited_at = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    edited_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    notes = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Команды", x => x.id_team);
-                });
+            // migrationBuilder.CreateTable(
+            //     name: "Teams",
+            //     columns: table => new
+            //     {
+            //         id_team = table.Column<int>(type: "int", nullable: false)
+            //             .Annotation("SqlServer:Identity", "1, 1"),
+            //         team_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+            //         user_access = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         created_at = table.Column<DateTime>(type: "datetime", nullable: true),
+            //         crated_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         edited_at = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         edited_by = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         notes = table.Column<string>(type: "nvarchar(max)", nullable: true)
+            //     },
+            //     constraints: table =>
+            //     {
+            //         table.PrimaryKey("PK_Команды", x => x.id_team);
+            //     });
 
             migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
@@ -2111,104 +2140,104 @@ namespace TodoListAPI.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "Users",
-                columns: table => new
-                {
-                    id_user = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    first_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    second_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    patronymic_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    id_user_status = table.Column<int>(type: "int", nullable: true),
-                    email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    registration_time = table.Column<DateTime>(type: "datetime", nullable: true),
-                    created_by = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
-                    created_at = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
-                    edited_by = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
-                    edited_at = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
-                    notes = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Пользователи", x => x.id_user);
-                    table.ForeignKey(
-                        name: "FK_Пользователи_Статус",
-                        column: x => x.id_user_status,
-                        principalTable: "Status",
-                        principalColumn: "id-status");
-                });
+            // migrationBuilder.CreateTable(
+            //     name: "Users",
+            //     columns: table => new
+            //     {
+            //         id_user = table.Column<int>(type: "int", nullable: false)
+            //             .Annotation("SqlServer:Identity", "1, 1"),
+            //         first_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         second_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         patronymic_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         id_user_status = table.Column<int>(type: "int", nullable: true),
+            //         email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+            //         registration_time = table.Column<DateTime>(type: "datetime", nullable: true),
+            //         created_by = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
+            //         created_at = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
+            //         edited_by = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
+            //         edited_at = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
+            //         notes = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true)
+            //     },
+            //     constraints: table =>
+            //     {
+            //         table.PrimaryKey("PK_Пользователи", x => x.id_user);
+            //         table.ForeignKey(
+            //             name: "FK_Пользователи_Статус",
+            //             column: x => x.id_user_status,
+            //             principalTable: "Status",
+            //             principalColumn: "id-status");
+            //     });
 
-            migrationBuilder.CreateTable(
-                name: "Tasks - Projects",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    idtask = table.Column<int>(name: "id-task", type: "int", nullable: false),
-                    idproject = table.Column<int>(name: "id-project", type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ЗадачаПроект", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_Задачи - Проекты_Задачи",
-                        column: x => x.idtask,
-                        principalTable: "Tasks",
-                        principalColumn: "id_task");
-                    table.ForeignKey(
-                        name: "FK_Задачи - Проекты_Проекты",
-                        column: x => x.idproject,
-                        principalTable: "Projects",
-                        principalColumn: "id_project");
-                });
+            // migrationBuilder.CreateTable(
+            //     name: "Tasks - Projects",
+            //     columns: table => new
+            //     {
+            //         id = table.Column<int>(type: "int", nullable: false)
+            //             .Annotation("SqlServer:Identity", "1, 1"),
+            //         idtask = table.Column<int>(name: "id-task", type: "int", nullable: false),
+            //         idproject = table.Column<int>(name: "id-project", type: "int", nullable: false)
+            //     },
+            //     constraints: table =>
+            //     {
+            //         table.PrimaryKey("PK_ЗадачаПроект", x => x.id);
+            //         table.ForeignKey(
+            //             name: "FK_Задачи - Проекты_Задачи",
+            //             column: x => x.idtask,
+            //             principalTable: "Tasks",
+            //             principalColumn: "id_task");
+            //         table.ForeignKey(
+            //             name: "FK_Задачи - Проекты_Проекты",
+            //             column: x => x.idproject,
+            //             principalTable: "Projects",
+            //             principalColumn: "id_project");
+            //     });
 
-            migrationBuilder.CreateTable(
-                name: "Tasks - Users",
-                columns: table => new
-                {
-                    id_assignees = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    id_task = table.Column<int>(type: "int", nullable: false),
-                    id_user = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Задачи - Пользователи", x => x.id_assignees);
-                    table.ForeignKey(
-                        name: "FK_Задачи - Пользователи_Задачи",
-                        column: x => x.id_task,
-                        principalTable: "Tasks",
-                        principalColumn: "id_task");
-                    table.ForeignKey(
-                        name: "FK_Задачи - Пользователи_Пользователи",
-                        column: x => x.id_user,
-                        principalTable: "Users",
-                        principalColumn: "id_user");
-                });
+            // migrationBuilder.CreateTable(
+            //     name: "Tasks - Users",
+            //     columns: table => new
+            //     {
+            //         id_assignees = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+            //         id_task = table.Column<int>(type: "int", nullable: false),
+            //         id_user = table.Column<int>(type: "int", nullable: false)
+            //     },
+            //     constraints: table =>
+            //     {
+            //         table.PrimaryKey("PK_Задачи - Пользователи", x => x.id_assignees);
+            //         table.ForeignKey(
+            //             name: "FK_Задачи - Пользователи_Задачи",
+            //             column: x => x.id_task,
+            //             principalTable: "Tasks",
+            //             principalColumn: "id_task");
+            //         table.ForeignKey(
+            //             name: "FK_Задачи - Пользователи_Пользователи",
+            //             column: x => x.id_user,
+            //             principalTable: "Users",
+            //             principalColumn: "id_user");
+            //     });
 
-            migrationBuilder.CreateTable(
-                name: "Users - Commands",
-                columns: table => new
-                {
-                    id_connection = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    id_user = table.Column<int>(type: "int", nullable: false),
-                    id_team = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Пользователи - Команды", x => x.id_connection);
-                    table.ForeignKey(
-                        name: "FK_Пользователи - Команды_Команды",
-                        column: x => x.id_team,
-                        principalTable: "Teams",
-                        principalColumn: "id_team");
-                    table.ForeignKey(
-                        name: "FK_Пользователи - Команды_Пользователи",
-                        column: x => x.id_user,
-                        principalTable: "Users",
-                        principalColumn: "id_user");
-                });
+            // migrationBuilder.CreateTable(
+            //     name: "Users - Commands",
+            //     columns: table => new
+            //     {
+            //         id_connection = table.Column<int>(type: "int", nullable: false)
+            //             .Annotation("SqlServer:Identity", "1, 1"),
+            //         id_user = table.Column<int>(type: "int", nullable: false),
+            //         id_team = table.Column<int>(type: "int", nullable: false)
+            //     },
+            //     constraints: table =>
+            //     {
+            //         table.PrimaryKey("PK_Пользователи - Команды", x => x.id_connection);
+            //         table.ForeignKey(
+            //             name: "FK_Пользователи - Команды_Команды",
+            //             column: x => x.id_team,
+            //             principalTable: "Teams",
+            //             principalColumn: "id_team");
+            //         table.ForeignKey(
+            //             name: "FK_Пользователи - Команды_Пользователи",
+            //             column: x => x.id_user,
+            //             principalTable: "Users",
+            //             principalColumn: "id_user");
+            //     });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -2339,7 +2368,7 @@ namespace TodoListAPI.Migrations
 
 ---
 
-### 📄 `Migrations/TodoListDbContextModelSnapshot.cs`
+### 📄 `Migrations/20250929211240_ConsolidateUserModels.Designer.cs`
 
 ```csharp
 ﻿// <auto-generated />
@@ -2347,6 +2376,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TodoListAPI.Models;
 
@@ -2355,9 +2385,11 @@ using TodoListAPI.Models;
 namespace TodoListAPI.Migrations
 {
     [DbContext(typeof(TodoListDbContext))]
-    partial class TodoListDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250929211240_ConsolidateUserModels")]
+    partial class ConsolidateUserModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2518,6 +2550,15 @@ namespace TodoListAPI.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("IdUserStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("IdUserStatusNavigationIdStatus")
+                        .HasColumnType("int");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
@@ -2532,7 +2573,13 @@ namespace TodoListAPI.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PatronymicName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
@@ -2540,6 +2587,12 @@ namespace TodoListAPI.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime?>("RegistrationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SecondName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -2552,6 +2605,8 @@ namespace TodoListAPI.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IdUserStatusNavigationIdStatus");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -2762,8 +2817,9 @@ namespace TodoListAPI.Migrations
                         .HasColumnType("int")
                         .HasColumnName("id_task");
 
-                    b.Property<int>("IdUser")
-                        .HasColumnType("int")
+                    b.Property<string>("IdUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("id_user");
 
                     b.HasKey("IdAssignees")
@@ -2828,81 +2884,6 @@ namespace TodoListAPI.Migrations
                     b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("TodoListAPI.Models.User", b =>
-                {
-                    b.Property<int>("IdUser")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id_user");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUser"));
-
-                    b.Property<string>("CreatedAt")
-                        .HasMaxLength(10)
-                        .HasColumnType("nchar(10)")
-                        .HasColumnName("created_at")
-                        .IsFixedLength();
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(10)
-                        .HasColumnType("nchar(10)")
-                        .HasColumnName("created_by")
-                        .IsFixedLength();
-
-                    b.Property<string>("EditedAt")
-                        .HasMaxLength(10)
-                        .HasColumnType("nchar(10)")
-                        .HasColumnName("edited_at")
-                        .IsFixedLength();
-
-                    b.Property<string>("EditedBy")
-                        .HasMaxLength(10)
-                        .HasColumnType("nchar(10)")
-                        .HasColumnName("edited_by")
-                        .IsFixedLength();
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("email");
-
-                    b.Property<string>("FirstName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("first_name");
-
-                    b.Property<int?>("IdUserStatus")
-                        .HasColumnType("int")
-                        .HasColumnName("id_user_status");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(10)
-                        .HasColumnType("nchar(10)")
-                        .HasColumnName("notes")
-                        .IsFixedLength();
-
-                    b.Property<string>("PatronymicName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("patronymic_name");
-
-                    b.Property<DateTime?>("RegistrationTime")
-                        .HasColumnType("datetime")
-                        .HasColumnName("registration_time");
-
-                    b.Property<string>("SecondName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("second_name");
-
-                    b.HasKey("IdUser")
-                        .HasName("PK_Пользователи");
-
-                    b.HasIndex("IdUserStatus");
-
-                    b.ToTable("Users");
-                });
-
             modelBuilder.Entity("TodoListAPI.Models.UsersCommand", b =>
                 {
                     b.Property<int>("IdConnection")
@@ -2916,8 +2897,9 @@ namespace TodoListAPI.Migrations
                         .HasColumnType("int")
                         .HasColumnName("id_team");
 
-                    b.Property<int>("IdUser")
-                        .HasColumnType("int")
+                    b.Property<string>("IdUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("id_user");
 
                     b.HasKey("IdConnection")
@@ -2981,6 +2963,15 @@ namespace TodoListAPI.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("TodoListAPI.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("TodoListAPI.Models.Status", "IdUserStatusNavigation")
+                        .WithMany("Users")
+                        .HasForeignKey("IdUserStatusNavigationIdStatus");
+
+                    b.Navigation("IdUserStatusNavigation");
+                });
+
             modelBuilder.Entity("TodoListAPI.Models.TasksProject", b =>
                 {
                     b.HasOne("TodoListAPI.Models.Project", "IdProjectNavigation")
@@ -3008,7 +2999,7 @@ namespace TodoListAPI.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Задачи - Пользователи_Задачи");
 
-                    b.HasOne("TodoListAPI.Models.User", "IdUserNavigation")
+                    b.HasOne("TodoListAPI.Models.ApplicationUser", "IdUserNavigation")
                         .WithMany("TasksUsers")
                         .HasForeignKey("IdUser")
                         .IsRequired()
@@ -3019,16 +3010,6 @@ namespace TodoListAPI.Migrations
                     b.Navigation("IdUserNavigation");
                 });
 
-            modelBuilder.Entity("TodoListAPI.Models.User", b =>
-                {
-                    b.HasOne("TodoListAPI.Models.Status", "IdUserStatusNavigation")
-                        .WithMany("Users")
-                        .HasForeignKey("IdUserStatus")
-                        .HasConstraintName("FK_Пользователи_Статус");
-
-                    b.Navigation("IdUserStatusNavigation");
-                });
-
             modelBuilder.Entity("TodoListAPI.Models.UsersCommand", b =>
                 {
                     b.HasOne("TodoListAPI.Models.Team", "IdTeamNavigation")
@@ -3037,7 +3018,7 @@ namespace TodoListAPI.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Пользователи - Команды_Команды");
 
-                    b.HasOne("TodoListAPI.Models.User", "IdUserNavigation")
+                    b.HasOne("TodoListAPI.Models.ApplicationUser", "IdUserNavigation")
                         .WithMany("UsersCommands")
                         .HasForeignKey("IdUser")
                         .IsRequired()
@@ -3046,6 +3027,13 @@ namespace TodoListAPI.Migrations
                     b.Navigation("IdTeamNavigation");
 
                     b.Navigation("IdUserNavigation");
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("TasksUsers");
+
+                    b.Navigation("UsersCommands");
                 });
 
             modelBuilder.Entity("TodoListAPI.Models.Project", b =>
@@ -3069,11 +3057,926 @@ namespace TodoListAPI.Migrations
                 {
                     b.Navigation("UsersCommands");
                 });
+#pragma warning restore 612, 618
+        }
+    }
+}
+```
 
-            modelBuilder.Entity("TodoListAPI.Models.User", b =>
+---
+
+### 📄 `Migrations/20250929211240_ConsolidateUserModels.cs`
+
+```csharp
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace TodoListAPI.Migrations
+{
+    /// <inheritdoc />
+    public partial class ConsolidateUserModels : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Задачи - Пользователи_Пользователи",
+                table: "Tasks - Users");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Пользователи - Команды_Пользователи",
+                table: "Users - Commands");
+
+            migrationBuilder.DropTable(
+                name: "Users");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "id_user",
+                table: "Users - Commands",
+                type: "nvarchar(450)",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "id_user",
+                table: "Tasks - Users",
+                type: "nvarchar(450)",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+
+            migrationBuilder.AddColumn<string>(
+                name: "FirstName",
+                table: "AspNetUsers",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.AddColumn<int>(
+                name: "IdUserStatus",
+                table: "AspNetUsers",
+                type: "int",
+                nullable: true);
+
+            migrationBuilder.AddColumn<int>(
+                name: "IdUserStatusNavigationIdStatus",
+                table: "AspNetUsers",
+                type: "int",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "Notes",
+                table: "AspNetUsers",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "PatronymicName",
+                table: "AspNetUsers",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "RegistrationTime",
+                table: "AspNetUsers",
+                type: "datetime2",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "SecondName",
+                table: "AspNetUsers",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_IdUserStatusNavigationIdStatus",
+                table: "AspNetUsers",
+                column: "IdUserStatusNavigationIdStatus");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AspNetUsers_Status_IdUserStatusNavigationIdStatus",
+                table: "AspNetUsers",
+                column: "IdUserStatusNavigationIdStatus",
+                principalTable: "Status",
+                principalColumn: "id-status");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Задачи - Пользователи_Пользователи",
+                table: "Tasks - Users",
+                column: "id_user",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Пользователи - Команды_Пользователи",
+                table: "Users - Commands",
+                column: "id_user",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropForeignKey(
+                name: "FK_AspNetUsers_Status_IdUserStatusNavigationIdStatus",
+                table: "AspNetUsers");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Задачи - Пользователи_Пользователи",
+                table: "Tasks - Users");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Пользователи - Команды_Пользователи",
+                table: "Users - Commands");
+
+            migrationBuilder.DropIndex(
+                name: "IX_AspNetUsers_IdUserStatusNavigationIdStatus",
+                table: "AspNetUsers");
+
+            migrationBuilder.DropColumn(
+                name: "FirstName",
+                table: "AspNetUsers");
+
+            migrationBuilder.DropColumn(
+                name: "IdUserStatus",
+                table: "AspNetUsers");
+
+            migrationBuilder.DropColumn(
+                name: "IdUserStatusNavigationIdStatus",
+                table: "AspNetUsers");
+
+            migrationBuilder.DropColumn(
+                name: "Notes",
+                table: "AspNetUsers");
+
+            migrationBuilder.DropColumn(
+                name: "PatronymicName",
+                table: "AspNetUsers");
+
+            migrationBuilder.DropColumn(
+                name: "RegistrationTime",
+                table: "AspNetUsers");
+
+            migrationBuilder.DropColumn(
+                name: "SecondName",
+                table: "AspNetUsers");
+
+            migrationBuilder.AlterColumn<int>(
+                name: "id_user",
+                table: "Users - Commands",
+                type: "int",
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(450)");
+
+            migrationBuilder.AlterColumn<int>(
+                name: "id_user",
+                table: "Tasks - Users",
+                type: "int",
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(450)");
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    id_user = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    id_user_status = table.Column<int>(type: "int", nullable: true),
+                    created_at = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
+                    created_by = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
+                    edited_at = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
+                    edited_by = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
+                    email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    first_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    notes = table.Column<string>(type: "nchar(10)", fixedLength: true, maxLength: 10, nullable: true),
+                    patronymic_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    registration_time = table.Column<DateTime>(type: "datetime", nullable: true),
+                    second_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Пользователи", x => x.id_user);
+                    table.ForeignKey(
+                        name: "FK_Пользователи_Статус",
+                        column: x => x.id_user_status,
+                        principalTable: "Status",
+                        principalColumn: "id-status");
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_id_user_status",
+                table: "Users",
+                column: "id_user_status");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Задачи - Пользователи_Пользователи",
+                table: "Tasks - Users",
+                column: "id_user",
+                principalTable: "Users",
+                principalColumn: "id_user");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Пользователи - Команды_Пользователи",
+                table: "Users - Commands",
+                column: "id_user",
+                principalTable: "Users",
+                principalColumn: "id_user");
+        }
+    }
+}
+```
+
+---
+
+### 📄 `Migrations/TodoListDbContextModelSnapshot.cs`
+
+```csharp
+﻿// <auto-generated />
+using System;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using TodoListAPI.Models;
+
+#nullable disable
+
+namespace TodoListAPI.Migrations
+{
+    [DbContext(typeof(TodoListDbContext))]
+    partial class TodoListDbContextModelSnapshot : ModelSnapshot
+    {
+        protected override void BuildModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "8.0.20")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.ApplicationUser", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("IdUserStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("IdUserStatusNavigationIdStatus")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PatronymicName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("RegistrationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SecondName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdUserStatusNavigationIdStatus");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.Project", b =>
+                {
+                    b.Property<int>("IdProject")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_project");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdProject"));
+
+                    b.Property<string>("CreatedAt")
+                        .HasMaxLength(10)
+                        .HasColumnType("nchar(10)")
+                        .HasColumnName("created_at")
+                        .IsFixedLength();
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(10)
+                        .HasColumnType("nchar(10)")
+                        .HasColumnName("created_by")
+                        .IsFixedLength();
+
+                    b.Property<string>("Descryption")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("descryption");
+
+                    b.Property<string>("EditedAt")
+                        .HasMaxLength(10)
+                        .HasColumnType("nchar(10)")
+                        .HasColumnName("edited_at")
+                        .IsFixedLength();
+
+                    b.Property<string>("EditedBy")
+                        .HasMaxLength(10)
+                        .HasColumnType("nchar(10)")
+                        .HasColumnName("edited_by")
+                        .IsFixedLength();
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("end_date");
+
+                    b.Property<int?>("IdTeam")
+                        .HasColumnType("int")
+                        .HasColumnName("id_team");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(10)
+                        .HasColumnType("nchar(10)")
+                        .HasColumnName("notes")
+                        .IsFixedLength();
+
+                    b.Property<string>("ProjectName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("project_name");
+
+                    b.Property<string>("ProjectType")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("project_type");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("start_date");
+
+                    b.HasKey("IdProject")
+                        .HasName("PK_Проекты");
+
+                    b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.Status", b =>
+                {
+                    b.Property<int>("IdStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id-status");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdStatus"));
+
+                    b.Property<string>("Название")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("IdStatus")
+                        .HasName("PK_Статус");
+
+                    b.ToTable("Status", (string)null);
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.Task", b =>
+                {
+                    b.Property<int>("IdTask")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_task");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdTask"));
+
+                    b.Property<DateTime?>("CompleteDate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("complete_date");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("DeadlineDate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("deadline_date");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime?>("EditedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("edited_at");
+
+                    b.Property<string>("EditedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<int?>("IdProject")
+                        .HasColumnType("int")
+                        .HasColumnName("id_project");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(50)
+                        .HasColumnType("nchar(50)")
+                        .HasColumnName("notes")
+                        .IsFixedLength();
+
+                    b.Property<string>("Priority")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("priority");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TaskName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("task_name");
+
+                    b.HasKey("IdTask")
+                        .HasName("PK_Задачи");
+
+                    b.ToTable("Tasks");
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.TasksProject", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("IdProject")
+                        .HasColumnType("int")
+                        .HasColumnName("id-project");
+
+                    b.Property<int>("IdTask")
+                        .HasColumnType("int")
+                        .HasColumnName("id-task");
+
+                    b.HasKey("Id")
+                        .HasName("PK_ЗадачаПроект");
+
+                    b.HasIndex("IdProject");
+
+                    b.HasIndex("IdTask");
+
+                    b.ToTable("Tasks - Projects", (string)null);
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.TasksUser", b =>
+                {
+                    b.Property<string>("IdAssignees")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("id_assignees");
+
+                    b.Property<int>("IdTask")
+                        .HasColumnType("int")
+                        .HasColumnName("id_task");
+
+                    b.Property<string>("IdUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("id_user");
+
+                    b.HasKey("IdAssignees")
+                        .HasName("PK_Задачи - Пользователи");
+
+                    b.HasIndex("IdTask");
+
+                    b.HasIndex("IdUser");
+
+                    b.ToTable("Tasks - Users", (string)null);
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.Team", b =>
+                {
+                    b.Property<int>("IdTeam")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_team");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdTeam"));
+
+                    b.Property<string>("CratedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("crated_by");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("EditedAt")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("edited_at");
+
+                    b.Property<string>("EditedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("TeamName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("team_name");
+
+                    b.Property<string>("UserAccess")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("user_access");
+
+                    b.HasKey("IdTeam")
+                        .HasName("PK_Команды");
+
+                    b.ToTable("Teams");
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.UsersCommand", b =>
+                {
+                    b.Property<int>("IdConnection")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_connection");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdConnection"));
+
+                    b.Property<int>("IdTeam")
+                        .HasColumnType("int")
+                        .HasColumnName("id_team");
+
+                    b.Property<string>("IdUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("id_user");
+
+                    b.HasKey("IdConnection")
+                        .HasName("PK_Пользователи - Команды");
+
+                    b.HasIndex("IdTeam");
+
+                    b.HasIndex("IdUser");
+
+                    b.ToTable("Users - Commands", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.HasOne("TodoListAPI.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.HasOne("TodoListAPI.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TodoListAPI.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.HasOne("TodoListAPI.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("TodoListAPI.Models.Status", "IdUserStatusNavigation")
+                        .WithMany("Users")
+                        .HasForeignKey("IdUserStatusNavigationIdStatus");
+
+                    b.Navigation("IdUserStatusNavigation");
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.TasksProject", b =>
+                {
+                    b.HasOne("TodoListAPI.Models.Project", "IdProjectNavigation")
+                        .WithMany("TasksProjects")
+                        .HasForeignKey("IdProject")
+                        .IsRequired()
+                        .HasConstraintName("FK_Задачи - Проекты_Проекты");
+
+                    b.HasOne("TodoListAPI.Models.Task", "IdTaskNavigation")
+                        .WithMany("TasksProjects")
+                        .HasForeignKey("IdTask")
+                        .IsRequired()
+                        .HasConstraintName("FK_Задачи - Проекты_Задачи");
+
+                    b.Navigation("IdProjectNavigation");
+
+                    b.Navigation("IdTaskNavigation");
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.TasksUser", b =>
+                {
+                    b.HasOne("TodoListAPI.Models.Task", "IdTaskNavigation")
+                        .WithMany("TasksUsers")
+                        .HasForeignKey("IdTask")
+                        .IsRequired()
+                        .HasConstraintName("FK_Задачи - Пользователи_Задачи");
+
+                    b.HasOne("TodoListAPI.Models.ApplicationUser", "IdUserNavigation")
+                        .WithMany("TasksUsers")
+                        .HasForeignKey("IdUser")
+                        .IsRequired()
+                        .HasConstraintName("FK_Задачи - Пользователи_Пользователи");
+
+                    b.Navigation("IdTaskNavigation");
+
+                    b.Navigation("IdUserNavigation");
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.UsersCommand", b =>
+                {
+                    b.HasOne("TodoListAPI.Models.Team", "IdTeamNavigation")
+                        .WithMany("UsersCommands")
+                        .HasForeignKey("IdTeam")
+                        .IsRequired()
+                        .HasConstraintName("FK_Пользователи - Команды_Команды");
+
+                    b.HasOne("TodoListAPI.Models.ApplicationUser", "IdUserNavigation")
+                        .WithMany("UsersCommands")
+                        .HasForeignKey("IdUser")
+                        .IsRequired()
+                        .HasConstraintName("FK_Пользователи - Команды_Пользователи");
+
+                    b.Navigation("IdTeamNavigation");
+
+                    b.Navigation("IdUserNavigation");
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.ApplicationUser", b =>
                 {
                     b.Navigation("TasksUsers");
 
+                    b.Navigation("UsersCommands");
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.Project", b =>
+                {
+                    b.Navigation("TasksProjects");
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.Status", b =>
+                {
+                    b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.Task", b =>
+                {
+                    b.Navigation("TasksProjects");
+
+                    b.Navigation("TasksUsers");
+                });
+
+            modelBuilder.Entity("TodoListAPI.Models.Team", b =>
+                {
                     b.Navigation("UsersCommands");
                 });
 #pragma warning restore 612, 618
@@ -3088,12 +3991,24 @@ namespace TodoListAPI.Migrations
 
 ```csharp
 using Microsoft.AspNetCore.Identity;
+using System.Collections.Generic; // Добавьте этот using
 
 namespace TodoListAPI.Models
 {
     public class ApplicationUser : IdentityUser
     {
-        // Вы можете добавить сюда дополнительные свойства для пользователя
+        // Свойства из вашего класса User, которых НЕТ в IdentityUser
+        public string? FirstName { get; set; }
+        public string? SecondName { get; set; }
+        public string? PatronymicName { get; set; }
+        public DateTime? RegistrationTime { get; set; }
+        public string? Notes { get; set; }
+
+        // Поля для внешних ключей и навигации
+        public int? IdUserStatus { get; set; }
+        public virtual Status? IdUserStatusNavigation { get; set; }
+        public virtual ICollection<TasksUser> TasksUsers { get; set; } = new List<TasksUser>();
+        public virtual ICollection<UsersCommand> UsersCommands { get; set; } = new List<UsersCommand>();
     }
 }
 ```
@@ -3148,13 +4063,12 @@ using System.Collections.Generic;
 
 namespace TodoListAPI.Models;
 
+// Models/Status.cs
 public partial class Status
 {
     public int IdStatus { get; set; }
-
     public string? Название { get; set; }
-
-    public virtual ICollection<User> Users { get; set; } = new List<User>();
+    public virtual ICollection<ApplicationUser> Users { get; set; } = new List<ApplicationUser>(); // <--- ИЗМЕНИТЬ НА ApplicationUser
 }
 ```
 
@@ -3239,14 +4153,10 @@ namespace TodoListAPI.Models;
 public partial class TasksUser
 {
     public string IdAssignees { get; set; } = null!;
-
     public int IdTask { get; set; }
-
-    public int IdUser { get; set; }
-
+    public string IdUser { get; set; } // <--- ИЗМЕНИТЬ НА STRING
     public virtual Task IdTaskNavigation { get; set; } = null!;
-
-    public virtual User IdUserNavigation { get; set; } = null!;
+    public virtual ApplicationUser IdUserNavigation { get; set; } = null!; // <--- ИЗМЕНИТЬ НА ApplicationUser
 }
 ```
 
@@ -3313,8 +4223,6 @@ public partial class TodoListDbContext : IdentityDbContext<ApplicationUser>
     public virtual DbSet<TasksUser> TasksUsers { get; set; }
 
     public virtual DbSet<Team> Teams { get; set; }
-
-    public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UsersCommand> UsersCommands { get; set; }
 
@@ -3484,53 +4392,6 @@ public partial class TodoListDbContext : IdentityDbContext<ApplicationUser>
                 .HasColumnName("user_access");
         });
 
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(e => e.IdUser).HasName("PK_Пользователи");
-
-            entity.Property(e => e.IdUser).HasColumnName("id_user");
-            entity.Property(e => e.CreatedAt)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("created_at");
-            entity.Property(e => e.CreatedBy)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("created_by");
-            entity.Property(e => e.EditedAt)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("edited_at");
-            entity.Property(e => e.EditedBy)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("edited_by");
-            entity.Property(e => e.Email)
-                .HasMaxLength(255)
-                .HasColumnName("email");
-            entity.Property(e => e.FirstName)
-                .HasMaxLength(255)
-                .HasColumnName("first_name");
-            entity.Property(e => e.IdUserStatus).HasColumnName("id_user_status");
-            entity.Property(e => e.Notes)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("notes");
-            entity.Property(e => e.PatronymicName)
-                .HasMaxLength(255)
-                .HasColumnName("patronymic_name");
-            entity.Property(e => e.RegistrationTime)
-                .HasColumnType("datetime")
-                .HasColumnName("registration_time");
-            entity.Property(e => e.SecondName)
-                .HasMaxLength(255)
-                .HasColumnName("second_name");
-
-            entity.HasOne(d => d.IdUserStatusNavigation).WithMany(p => p.Users)
-                .HasForeignKey(d => d.IdUserStatus)
-                .HasConstraintName("FK_Пользователи_Статус");
-        });
-
         modelBuilder.Entity<UsersCommand>(entity =>
         {
             entity.HasKey(e => e.IdConnection).HasName("PK_Пользователи - Команды");
@@ -3561,50 +4422,6 @@ public partial class TodoListDbContext : IdentityDbContext<ApplicationUser>
 
 ---
 
-### 📄 `Models/User.cs`
-
-```csharp
-﻿using System;
-using System.Collections.Generic;
-
-namespace TodoListAPI.Models;
-
-public partial class User
-{
-    public int IdUser { get; set; }
-
-    public string? FirstName { get; set; }
-
-    public string? SecondName { get; set; }
-
-    public string? PatronymicName { get; set; }
-
-    public int? IdUserStatus { get; set; }
-
-    public string? Email { get; set; }
-
-    public DateTime? RegistrationTime { get; set; }
-
-    public string? CreatedBy { get; set; }
-
-    public string? CreatedAt { get; set; }
-
-    public string? EditedBy { get; set; }
-
-    public string? EditedAt { get; set; }
-
-    public string? Notes { get; set; }
-
-    public virtual Status? IdUserStatusNavigation { get; set; }
-
-    public virtual ICollection<TasksUser> TasksUsers { get; set; } = new List<TasksUser>();
-
-    public virtual ICollection<UsersCommand> UsersCommands { get; set; } = new List<UsersCommand>();
-}
-```
-
----
-
 ### 📄 `Models/UsersCommand.cs`
 
 ```csharp
@@ -3613,17 +4430,14 @@ using System.Collections.Generic;
 
 namespace TodoListAPI.Models;
 
+// Models/UsersCommand.cs
 public partial class UsersCommand
 {
     public int IdConnection { get; set; }
-
-    public int IdUser { get; set; }
-
+    public string IdUser { get; set; } // <--- ИЗМЕНИТЬ НА STRING
     public int IdTeam { get; set; }
-
     public virtual Team IdTeamNavigation { get; set; } = null!;
-
-    public virtual User IdUserNavigation { get; set; } = null!;
+    public virtual ApplicationUser IdUserNavigation { get; set; } = null!; // <--- ИЗМЕНИТЬ НА ApplicationUser
 }
 ```
 
@@ -3677,10 +4491,95 @@ public partial class UsersCommand
 
 ---
 
-### 📄 `Services/Auth.cs`
+### 📄 `Services/AuthService.cs`
 
 ```csharp
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
+using TodoListAPI.Models; // Важно, чтобы была ссылка на ApplicationUser
 
+namespace TodoListAPI.Services
+{
+    public class AuthService : IAuthService
+    {
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IConfiguration _configuration;
+
+        // Внедряем UserManager для работы с пользователями и IConfiguration для доступа к секретному ключу
+        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        {
+            _userManager = userManager;
+            _configuration = configuration;
+        }
+
+        public async Task<IdentityResult> RegisterUserAsync(string email, string password)
+        {
+            var user = new ApplicationUser { UserName = email, Email = email };
+            var result = await _userManager.CreateAsync(user, password);
+            return result;
+        }
+
+        public async Task<string> LoginUserAsync(string email, string password)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null && await _userManager.CheckPasswordAsync(user, password))
+            {
+                // Логин и пароль верные, генерируем JWT токен
+                return GenerateJwtToken(user);
+            }
+
+            // Если что-то не так, возвращаем null
+            return null;
+        }
+
+        private string GenerateJwtToken(ApplicationUser user)
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(120),
+                signingCredentials: credentials);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+    }
+}
+```
+
+---
+
+### 📄 `Services/IAuthService.cs`
+
+```csharp
+using Microsoft.AspNetCore.Identity;
+using System.Threading.Tasks;
+
+namespace TodoListAPI.Services
+{
+    public interface IAuthService
+    {
+        // Метод для регистрации пользователя
+        Task<IdentityResult> RegisterUserAsync(string email, string password);
+
+        // Метод для входа пользователя (возвращает токен или другой признак успеха)
+        Task<string> LoginUserAsync(string email, string password);
+    }
+}
 ```
 
 ---

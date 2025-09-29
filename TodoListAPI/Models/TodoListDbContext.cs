@@ -23,8 +23,6 @@ public partial class TodoListDbContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<Team> Teams { get; set; }
 
-    public virtual DbSet<User> Users { get; set; }
-
     public virtual DbSet<UsersCommand> UsersCommands { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -191,53 +189,6 @@ public partial class TodoListDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.UserAccess)
                 .HasMaxLength(255)
                 .HasColumnName("user_access");
-        });
-
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(e => e.IdUser).HasName("PK_Пользователи");
-
-            entity.Property(e => e.IdUser).HasColumnName("id_user");
-            entity.Property(e => e.CreatedAt)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("created_at");
-            entity.Property(e => e.CreatedBy)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("created_by");
-            entity.Property(e => e.EditedAt)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("edited_at");
-            entity.Property(e => e.EditedBy)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("edited_by");
-            entity.Property(e => e.Email)
-                .HasMaxLength(255)
-                .HasColumnName("email");
-            entity.Property(e => e.FirstName)
-                .HasMaxLength(255)
-                .HasColumnName("first_name");
-            entity.Property(e => e.IdUserStatus).HasColumnName("id_user_status");
-            entity.Property(e => e.Notes)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("notes");
-            entity.Property(e => e.PatronymicName)
-                .HasMaxLength(255)
-                .HasColumnName("patronymic_name");
-            entity.Property(e => e.RegistrationTime)
-                .HasColumnType("datetime")
-                .HasColumnName("registration_time");
-            entity.Property(e => e.SecondName)
-                .HasMaxLength(255)
-                .HasColumnName("second_name");
-
-            entity.HasOne(d => d.IdUserStatusNavigation).WithMany(p => p.Users)
-                .HasForeignKey(d => d.IdUserStatus)
-                .HasConstraintName("FK_Пользователи_Статус");
         });
 
         modelBuilder.Entity<UsersCommand>(entity =>
