@@ -6,11 +6,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TodoListAPI.Models;
+using Microsoft.AspNetCore.Authorization; // <-- Добавьте это
+
 
 namespace TodoListAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly TodoListDbContext _context;

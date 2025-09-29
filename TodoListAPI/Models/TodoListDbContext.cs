@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 namespace TodoListAPI.Models;
 
-public partial class TodoListDbContext : DbContext
+public partial class TodoListDbContext : IdentityDbContext<ApplicationUser>
 {
     public TodoListDbContext(DbContextOptions<TodoListDbContext> options)
         : base(options)
@@ -29,6 +29,8 @@ public partial class TodoListDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<Project>(entity =>
         {
             entity.HasKey(e => e.IdProject).HasName("PK_Проекты");
