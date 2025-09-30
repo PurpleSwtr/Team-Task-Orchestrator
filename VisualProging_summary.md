@@ -4,6 +4,665 @@
 ### 📄 `.gitignore`
 
 ```gitignore
+Storybook/
+```
+
+---
+
+### 📄 `README.md`
+
+```markdown
+
+```
+
+---
+
+### 📄 `Frontend/.gitignore`
+
+```gitignore
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.DS_Store
+dist
+dist-ssr
+coverage
+*.local
+
+/cypress/videos/
+/cypress/screenshots/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+*.tsbuildinfo
+```
+
+---
+
+### 📄 `Frontend/.prettierrc.json`
+
+```json
+{
+  "$schema": "https://json.schemastore.org/prettierrc",
+  "semi": false,
+  "singleQuote": true,
+  "printWidth": 100
+}
+```
+
+---
+
+### 📄 `Frontend/README.md`
+
+```markdown
+# Frontend
+
+This template should help get you started developing with Vue 3 in Vite.
+
+## Recommended IDE Setup
+
+[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+
+## Type Support for `.vue` Imports in TS
+
+TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+
+## Customize configuration
+
+See [Vite Configuration Reference](https://vite.dev/config/).
+
+## Project Setup
+
+```sh
+npm install
+```
+
+### Compile and Hot-Reload for Development
+
+```sh
+npm run dev
+```
+
+### Type-Check, Compile and Minify for Production
+
+```sh
+npm run build
+```
+
+### Lint with [ESLint](https://eslint.org/)
+
+```sh
+npm run lint
+```
+```
+
+---
+
+### 📄 `Frontend/env.d.ts`
+
+```typescript
+/// <reference types="vite/client" />
+```
+
+---
+
+### 📄 `Frontend/eslint.config.ts`
+
+```typescript
+import { globalIgnores } from 'eslint/config'
+import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
+import pluginVue from 'eslint-plugin-vue'
+import skipFormatting from '@vue/eslint-config-prettier/skip-formatting'
+
+// To allow more languages other than `ts` in `.vue` files, uncomment the following lines:
+// import { configureVueProject } from '@vue/eslint-config-typescript'
+// configureVueProject({ scriptLangs: ['ts', 'tsx'] })
+// More info at https://github.com/vuejs/eslint-config-typescript/#advanced-setup
+
+export default defineConfigWithVueTs(
+  {
+    name: 'app/files-to-lint',
+    files: ['**/*.{ts,mts,tsx,vue}'],
+  },
+
+  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
+
+  pluginVue.configs['flat/essential'],
+  vueTsConfigs.recommended,
+  skipFormatting,
+)
+```
+
+---
+
+### 📄 `Frontend/index.html`
+
+```html
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDoApp</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+```
+
+---
+
+### 📄 `Frontend/package.json`
+
+```json
+{
+  "name": "frontend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build",
+    "lint": "eslint . --fix",
+    "format": "prettier --write src/"
+  },
+  "dependencies": {
+    "pinia": "^3.0.3",
+    "vue": "^3.5.18",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.13",
+    "@tsconfig/node22": "^22.0.2",
+    "@types/node": "^22.16.5",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.6.0",
+    "@vue/tsconfig": "^0.7.0",
+    "eslint": "^9.31.0",
+    "eslint-plugin-vue": "~10.3.0",
+    "jiti": "^2.4.2",
+    "npm-run-all2": "^8.0.4",
+    "prettier": "3.6.2",
+    "tailwindcss": "^4.1.13",
+    "typescript": "~5.8.0",
+    "vite": "^7.0.6",
+    "vite-plugin-vue-devtools": "^8.0.0",
+    "vue-tsc": "^3.0.4"
+  }
+}
+```
+
+---
+
+### 📄 `Frontend/tsconfig.app.json`
+
+```json
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "exclude": ["src/**/__tests__/*"],
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+```
+
+---
+
+### 📄 `Frontend/tsconfig.json`
+
+```json
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ],
+  "compilerOptions": {
+    "allowJs": true
+  }
+}
+```
+
+---
+
+### 📄 `Frontend/tsconfig.node.json`
+
+```json
+{
+  "extends": "@tsconfig/node22/tsconfig.json",
+  "include": [
+    "vite.config.*",
+    "vitest.config.*",
+    "cypress.config.*",
+    "nightwatch.conf.*",
+    "playwright.config.*",
+    "eslint.config.*"
+  ],
+  "compilerOptions": {
+    "noEmit": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node"]
+  }
+}
+```
+
+---
+
+### 📄 `Frontend/vite.config.ts`
+
+```typescript
+import { fileURLToPath, URL } from 'node:url'
+
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import vueDevTools from 'vite-plugin-vue-devtools'
+import tailwindcss from '@tailwindcss/vite'
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [vue(), vueDevTools(), tailwindcss()],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+})
+```
+
+---
+
+### 📄 `Frontend/src/App.vue`
+
+```vue
+<script setup lang="ts">
+import { RouterView } from 'vue-router'
+</script>
+
+<template>
+  <!-- Здесь будет отображаться содержимое наших будущих страниц -->
+  <RouterView />
+</template>
+
+<style scoped>
+/* Стили пока оставим пустыми */
+</style>
+```
+
+---
+
+### 📄 `Frontend/src/main.ts`
+
+```typescript
+import './assets/main.css'
+
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+
+import App from './App.vue'
+import router from './router'
+
+const app = createApp(App)
+
+app.use(createPinia())
+app.use(router)
+
+app.mount('#app')
+```
+
+---
+
+### 📄 `Frontend/src/assets/base.css`
+
+```css
+
+```
+
+---
+
+### 📄 `Frontend/src/assets/main.css`
+
+```css
+@import './base.css';
+@import 'tailwindcss';
+```
+
+---
+
+### 📄 `Frontend/src/components/CardTask.vue`
+
+```vue
+<template>
+  <div class="p-4 pl-7 ml-5 mt-10 bg-yellow-200 text-black rounded-lg w-80 max-w-full">
+    <h1 class="text-lg font-semibold truncate">{{ props.tittle }}</h1>
+    <p class="font-light line-clamp-3">{{ props.task }}</p>
+    <div class="flex items-center gap-2 mt-2">
+      <input type="checkbox" />
+      <span class="text-sm">Выполнено</span>
+    </div>
+  </div>
+</template>
+<script setup>
+const props = defineProps({
+  tittle: String,
+  task: String,
+})
+
+// name = "Задача"
+// text = "Текст"
+// list["task_1"] = {"name": name,"text": text}
+// list["task_2"] = {"name": name,"text": text}
+// list["task_3"] = {"name": name,"text": text}
+// console.log(list)
+</script>
+
+<style></style>
+```
+
+---
+
+### 📄 `Frontend/src/router/index.ts`
+
+```typescript
+import { createRouter, createWebHistory } from 'vue-router'
+import HomePage from '../views/HomePage.vue'
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      name: 'home',
+      component: HomePage,
+    },
+  ],
+})
+
+export default router
+```
+
+---
+
+### 📄 `Frontend/src/views/HomePage.vue`
+
+```vue
+<template>
+  <CardTask 
+    :tittle = "tittle"
+    :task = "task"/>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import CardTask from '@/components/CardTask.vue'
+
+// 3. Объявляем переменные, чтобы Vue их "увидел"
+const tittle = ref("Мое первое задание");
+const task = ref("Нужно сделать X и Y.");
+</script>
+
+<style>
+</style>
+```
+
+---
+
+### 📄 `Storybook/dock.md`
+
+```markdown
+Отличный вопрос! Это не просто "не сложно", это **фантастическая идея** и логичный следующий шаг для любого современного разработчика.
+
+**Короткий ответ:** Нет, это совсем не сложно, особенно с современными инструментами. Процесс очень понятный, и я проведу вас по каждому шагу.
+
+### **Зачем это делать? (Ключевые преимущества)**
+
+1.  **Портативность:** Любой другой разработчик (или вы на другом компьютере) сможет запустить ваш проект одной командой, не устанавливая SQL Server вручную. Вся база данных "упакована" вместе с проектом.
+2.  **Изоляция:** Ваша база данных работает в изолированном контейнере и не "засоряет" вашу основную операционную систему. Вы можете легко удалить ее без следа.
+3.  **Консистентность:** Ваше окружение для разработки будет идентично окружению коллег или даже тестовому серверу, что уменьшает количество ошибок "а у меня на машине все работало".
+
+---
+
+### **План действий:**
+
+1.  Установить Docker Desktop.
+2.  Создать специальный файл `docker-compose.yml`, который опишет наш контейнер с SQL Server.
+3.  Запустить контейнер одной командой.
+4.  Скопировать ваш `.bak` файл внутрь контейнера.
+5.  Выполнить команду восстановления базы данных внутри контейнера.
+6.  Обновить строку подключения в вашем API.
+
+---
+
+### **Шаг 1: Установка Docker Desktop**
+
+Если у вас еще не установлен Docker, скачайте его с официального сайта и установите. Это приложение, которое позволяет легко управлять контейнерами на Windows.
+
+*   **Скачать Docker Desktop:** [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)
+
+После установки убедитесь, что Docker Desktop запущен (вы увидите иконку кита в трее).
+
+### **Шаг 2: Создание файла `docker-compose.yml`**
+
+Это "рецепт" для Docker, который описывает, какие контейнеры мы хотим запустить и с какими настройками.
+
+1.  В корневой папке вашего проекта `TodoListAPI` (там же, где лежит `.csproj` файл) создайте новый файл с именем **`docker-compose.yml`**.
+2.  Скопируйте в него следующее содержимое:
+
+```yaml
+version: '3.8'
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sql_server_container
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong!Password123 # ВАЖНО: Придумайте надежный пароль!
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql/
+
+volumes:
+  sql_data:
+```
+
+**Разбор файла:**
+*   `image`: Мы используем официальный образ SQL Server 2022 от Microsoft.
+*   `container_name`: Простое имя для нашего контейнера, чтобы к нему было легко обращаться.
+*   `environment`:
+    *   `ACCEPT_EULA=Y`: Обязательное условие для запуска SQL Server.
+    *   `SA_PASSWORD`: Мы устанавливаем пароль для системного администратора (`sa`). **Обязательно замените `YourStrong!Password123` на свой пароль.**
+*   `ports`: "Пробрасываем" стандартный порт SQL Server `1433` из контейнера на ваш компьютер. Это позволит вашему API подключаться к нему.
+*   `volumes`: Создаем именованный том `sql_data`, чтобы данные вашей БД не удалялись при перезапуске контейнера.
+
+### **Шаг 3: Запуск контейнера**
+
+1.  Откройте терминал в VS Code в папке вашего проекта.
+2.  Выполните команду:
+
+    ```bash
+    docker-compose up -d
+    ```
+    *   `-d` (detached) означает "запустить в фоновом режиме".
+
+Docker скачает образ SQL Server (это может занять несколько минут в первый раз) и запустит контейнер. Чтобы проверить, что он работает, выполните команду `docker ps`. Вы должны увидеть ваш `sql_server_container` в списке.
+
+### **Шаг 4: Восстановление вашей базы данных**
+
+Это ключевой шаг.
+
+1.  **Копируем `.bak` файл внутрь контейнера.**
+    Положите ваш `smss.bak` в папку, где лежит `docker-compose.yml`. Затем выполните команду `docker cp` (copy):
+
+    ```bash
+    docker cp ./smss.bak sql_server_container:/var/opt/mssql/smss.bak
+    ```
+    (Эта команда копирует файл `smss.bak` из текущей папки в папку `/var/opt/mssql/` внутри контейнера).
+
+2.  **Выполняем команду восстановления.**
+    Теперь мы выполним команду `sqlcmd` внутри контейнера, чтобы восстановить базу. **Вставьте в команду ваш пароль**, который вы указали в `docker-compose.yml`.
+
+    ```bash
+    docker exec -it sql_server_container /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Password123' -Q "RESTORE DATABASE [TodoListDB] FROM DISK = N'/var/opt/mssql/smss.bak' WITH FILE = 1, MOVE N'smss' TO N'/var/opt/mssql/data/TodoListDB.mdf', MOVE N'smss_log' TO N'/var/opt/mssql/data/TodoListDB_log.ldf', NOUNLOAD, REPLACE, STATS = 5"
+    ```
+    *   **Важно:** Эта длинная команда — одна строка. Она подключается к SQL Server внутри контейнера и выполняет стандартный T-SQL запрос на восстановление, указывая новые пути для файлов базы данных внутри файловой системы контейнера.
+
+### **Шаг 5: Обновление строки подключения в API**
+
+Последний штрих — нужно сказать вашему API, как теперь подключаться к базе данных.
+
+1.  Откройте файл `appsettings.json`.
+2.  Измените вашу `ConnectionStrings`:
+
+    **Было:**
+    `"DefaultConnection": "Server=localhost\\MSSQLSERVER01;Database=TodoListDB;Trusted_Connection=True;TrustServerCertificate=True;"`
+
+    **Стало:**
+    `"DefaultConnection": "Server=localhost,1433;Database=TodoListDB;User Id=sa;Password=YourStrong!Password123;TrustServerCertificate=True;"`
+
+**Ключевые изменения:**
+*   `Server=localhost,1433`: Мы теперь явно указываем порт.
+*   `Trusted_Connection=True` заменяется на `User Id=sa;Password=...`, потому что мы подключаемся не через аутентификацию Windows, а под пользователем `sa` с паролем.
+
+### **Готово!**
+
+Теперь запускайте ваше API командой `dotnet run`. Оно подключится к базе данных, работающей в Docker! Вы только что сделали свой проект гораздо более профессиональным и портативным.
+
+Чтобы остановить контейнер с базой данных, выполните в терминале команду `docker-compose down`.
+```
+
+---
+
+### 📄 `Storybook/frontend-plan.md`
+
+```markdown
+Конечно, я составлю для вас подробный план по развитию вашего frontend-проекта. У вас заложена отличная основа с использованием современного стека (Vue 3, Vite, TypeScript, Pinia, Tailwind CSS). Теперь важно правильно выстроить архитектуру и процессы, чтобы приложение было легко поддерживать и расширять в будущем.
+
+### Этап 1: Укрепление фундамента и организация кода (текущий этап)
+
+На этом этапе ваша главная задача — заложить правила и структуру, которые предотвратят хаос по мере роста проекта.
+
+#### 1. Структура проекта
+Ваша текущая структура (`components`, `views`, `router`) — это хороший старт. Давайте её немного детализируем и расширим:
+
+*   **`src/components`**: Разделите компоненты на три категории:
+    *   **`ui`**: Мелкие, переиспользуемые компоненты, которые ничего не знают о бизнес-логике (кнопки, инпуты, модальные окна, иконки). Их можно будет легко использовать в любой части приложения.
+    *   **`features`**: Компоненты, реализующие конкретную бизнес-логику (например, `TaskAddForm`, `TaskList`, `TaskFilter`). Они могут использовать UI-компоненты.
+    *   **`layouts`**: Компоненты, определяющие структуру страниц (например, `DefaultLayout` с шапкой и подвалом, `AuthLayout` для страниц входа).
+
+*   **`src/views` (или `src/pages`)**: Оставьте здесь только компоненты страниц, которые собираются из `layouts` и `features`. Страницы должны быть максимально "тонкими", то есть содержать минимум логики.
+
+*   **`src/store` (или `src/stores`)**: Здесь будут храниться ваши модули Pinia. Для каждого крупного раздела приложения (задачи, пользователи, настройки) создавайте отдельный файл.
+
+*   **`src/router`**: У вас уже есть `index.ts`. По мере роста вы можете вынести роуты в отдельные файлы (`tasks.routes.ts`, `user.routes.ts`) и импортировать их в главный.
+
+*   **`src/api`**: Создайте эту директорию для всей логики, связанной с отправкой запросов на сервер. Это позволит отделить логику получения данных от их отображения.
+
+*   **`src/composables`**: Для переиспользуемой логики (например, работа с `localStorage`, форматирование дат) используйте Vue Composables.
+
+#### 2. Работа со стилями
+Вы используете Tailwind CSS — это отлично для быстрого прототипирования и создания консистентного дизайна.
+*   **Конфигурация Tailwind**: Настройте файл `tailwind.config.js`, чтобы определить цвета вашего бренда, шрифты, отступы. Это централизует стили и упростит редизайн в будущем.
+*   **Глобальные стили**: Файл `assets/main.css` используйте для самых базовых стилей (например, стили для `body`, импорт шрифтов) и директив Tailwind. Избегайте написания большого количества кастомного CSS. Старайтесь максимально использовать утилитарные классы Tailwind.
+
+### Этап 2: Построение архитектуры приложения
+
+Теперь, когда структура определена, можно сосредоточиться на том, как будут взаимодействовать разные части приложения.
+
+#### 1. Управление состоянием (Pinia)
+Pinia — мощный инструмент. Используйте его правильно:
+*   **Разделяйте хранилища**: Не создавайте одно гигантское хранилище. Разделите логику по доменам: одно хранилище для задач (`tasks.ts`), другое для аутентификации пользователя (`auth.ts`).
+*   **Действия (actions)**: Всю асинхронную логику и изменение состояния выносите в `actions`. Компоненты не должны напрямую отправлять запросы к API, они должны вызывать `action` из хранилища.
+*   **Геттеры (getters)**: Используйте геттеры для вычисляемых данных на основе состояния (например, отфильтровать выполненные задачи, посчитать их количество). Это позволяет не дублировать логику в компонентах.
+
+#### 2. Маршрутизация (Vue Router)
+*   **Layouts**: Используйте систему вложенных роутов для реализации разных шаблонов страниц. Например, у вас может быть основной роут с `MainLayout` и дочерние роуты для страниц "Задачи", "Профиль".
+*   **Защита роутов (Route Guards)**: Для страниц, требующих авторизации, используйте навигационные охранники (`beforeEnter` или глобальный `beforeEach`) для проверки, вошел ли пользователь в систему.
+
+#### 3. Взаимодействие с сервером (API)
+*   **Создайте слой API**: В папке `src/api` создайте модули для работы с разными частями вашего бэкенда (например, `tasks.ts`, `auth.ts`). Используйте `fetch` или библиотеку вроде `axios`. Это изолирует логику запросов.
+*   **Обработка ошибок**: Централизуйте обработку ошибок API. Можно создать общую функцию, которая будет обрабатывать ошибки сети, ошибки сервера и показывать уведомления пользователю.
+
+### Этап 3: Качество кода и удобство поддержки
+
+Проект будет расти, и важно, чтобы его было легко поддерживать.
+
+#### 1. Типизация (TypeScript)
+*   **Определяйте типы**: Создайте в папке `src/types` файлы с описанием ключевых сущностей вашего приложения (например, `task.ts` с интерфейсом `ITask`). Используйте эти типы в компонентах, хранилищах и API-слое. Это значительно уменьшит количество ошибок.
+*   **Props компонентов**: Всегда типизируйте `props` ваших компонентов, как вы уже начали делать в `CardTask.vue`.
+
+#### 2. Линтинг и форматирование
+У вас уже настроены ESLint и Prettier. Это отлично!
+*   **Соблюдайте правила**: Сделайте проверку линтером частью вашего процесса разработки. Запускайте `npm run lint` регулярно. Можно настроить проверку при коммите (с помощью `husky` и `lint-staged`).
+*   **Единый стиль**: Prettier обеспечивает единый стиль кода, что крайне важно для командной работы.
+
+#### 3. Тестирование
+Начните писать тесты как можно раньше. Это может показаться лишней работой, но в долгосрочной перспективе сэкономит массу времени.
+*   **Unit-тесты**: Для тестирования логики в хранилищах Pinia и ваших composables. Используйте фреймворк типа `Vitest`.
+*   **Компонентные тесты**: Для проверки того, что ваши компоненты правильно отображаются и реагируют на действия пользователя. Используйте `@vue/test-utils`.
+
+### Этап 4: Пользовательский опыт (UI/UX)
+
+#### 1. Создание библиотеки UI-компонентов
+Все ваши кнопки, поля ввода, чекбоксы и другие базовые элементы вынесите в папку `src/components/ui`.
+*   **Преимущества**: Это гарантирует, что все элементы в приложении выглядят одинаково. Изменение дизайна кнопки потребует правки только в одном файле.
+*   **Storybook**: В будущем вы можете внедрить Storybook — инструмент для изолированной разработки и демонстрации UI-компонентов.
+
+#### 2. Обратная связь с пользователем
+*   **Состояния загрузки**: Когда данные загружаются с сервера, показывайте пользователю индикатор загрузки (спиннер).
+*   **Обработка ошибок**: Если произошла ошибка (например, задача не создалась), покажите пользователю понятное уведомление.
+*   **Оптимистичные обновления**: Для улучшения UX можно использовать "оптимистичные обновления". Например, когда пользователь добавляет задачу, вы сразу показываете её в списке, а сетевой запрос отправляете в фоне. В случае ошибки — откатываете изменение и показываете уведомление.
+
+### Итог: Дорожная карта для вашего проекта
+
+1.  **Сейчас**: Детализируйте структуру проекта (папки `api`, `composables`, `store`, `types`, `layouts`). Настройте `tailwind.config.js`.
+2.  **Ближайшее будущее**: Начните выносить логику в Pinia `stores` и `actions`. Создайте слой для работы с API. Опишите интерфейсы TypeScript для ваших данных.
+3.  **По мере роста**: Выделяйте переиспользуемые UI-компоненты. Начинайте покрывать новую логику юнит-тестами.
+4.  **В перспективе**: Внедрите компонентные тесты. Рассмотрите использование Storybook для вашей библиотеки UI-компонентов.
+
+Следуя этому плану, вы сможете построить масштабируемое, поддерживаемое и удобное в разработке приложение. Удачи
+```
+
+---
+
+### 📄 `TodoListAPI/.gitignore`
+
+```gitignore
 ## Ignore Visual Studio temporary files, build results, and
 ## files generated by popular Visual Studio add-ons.
 ##
@@ -485,7 +1144,7 @@ $RECYCLE.BIN/
 
 ---
 
-### 📄 `Program.cs`
+### 📄 `TodoListAPI/Program.cs`
 
 ```csharp
 using TodoListAPI.Models;
@@ -557,7 +1216,7 @@ app.Run();
 
 ---
 
-### 📄 `TodoListAPI.csproj`
+### 📄 `TodoListAPI/TodoListAPI.csproj`
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk.Web">
@@ -590,7 +1249,7 @@ app.Run();
 
 ---
 
-### 📄 `TodoListAPI.sln`
+### 📄 `TodoListAPI/TodoListAPI.sln`
 
 ```text
 Microsoft Visual Studio Solution File, Format Version 12.00
@@ -621,7 +1280,7 @@ EndGlobal
 
 ---
 
-### 📄 `appsettings.Development.json`
+### 📄 `TodoListAPI/appsettings.Development.json`
 
 ```json
 {
@@ -636,7 +1295,7 @@ EndGlobal
 
 ---
 
-### 📄 `appsettings.json`
+### 📄 `TodoListAPI/appsettings.json`
 
 ```json
 {
@@ -650,7 +1309,7 @@ EndGlobal
     }
   },
   "Jwt": {
-    "Key": "qps3kHGw-vrq2mlZg-08AMVoW0-eFO137LE",
+    "Key": "PBZLBHptxwBW-5TmEZ7gW5kWp-4eHq*mZFs593-qu7f59#AYAJe-t2Ya*56DAYBw-$u#J8DDw6JGX",
     "Issuer": "http://localhost:5023",
     "Audience": "http://localhost:5023"
   },
@@ -660,7 +1319,7 @@ EndGlobal
 
 ---
 
-### 📄 `Авторизация.md`
+### 📄 `TodoListAPI/Авторизация.md`
 
 ```markdown
 Авторизация. И на сервере и на клиенте.
@@ -672,7 +1331,7 @@ EndGlobal
 
 ---
 
-### 📄 `.config/dotnet-tools.json`
+### 📄 `TodoListAPI/.config/dotnet-tools.json`
 
 ```json
 {
@@ -692,7 +1351,7 @@ EndGlobal
 
 ---
 
-### 📄 `Controllers/AuthController.cs`
+### 📄 `TodoListAPI/Controllers/AuthController.cs`
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
@@ -743,7 +1402,7 @@ namespace TodoListAPI.Controllers
 
 ---
 
-### 📄 `Controllers/ProjectsController.cs`
+### 📄 `TodoListAPI/Controllers/ProjectsController.cs`
 
 ```csharp
 using System;
@@ -858,7 +1517,7 @@ namespace TodoListAPI.Controllers
 
 ---
 
-### 📄 `Controllers/StatussController.cs`
+### 📄 `TodoListAPI/Controllers/StatussController.cs`
 
 ```csharp
 using System;
@@ -973,7 +1632,7 @@ namespace TodoListAPI.Controllers
 
 ---
 
-### 📄 `Controllers/TasksController.cs`
+### 📄 `TodoListAPI/Controllers/TasksController.cs`
 
 ```csharp
 using System;
@@ -1092,7 +1751,7 @@ namespace TodoListAPI.Controllers
 
 ---
 
-### 📄 `Controllers/UsersController.cs`
+### 📄 `TodoListAPI/Controllers/UsersController.cs`
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
@@ -1151,7 +1810,7 @@ namespace TodoListAPI.Controllers
 
 ---
 
-### 📄 `Migrations/20250929211742_InitialCreate.Designer.cs`
+### 📄 `TodoListAPI/Migrations/20250929211742_InitialCreate.Designer.cs`
 
 ```csharp
 ﻿// <auto-generated />
@@ -1848,7 +2507,7 @@ namespace TodoListAPI.Migrations
 
 ---
 
-### 📄 `Migrations/20250929211742_InitialCreate.cs`
+### 📄 `TodoListAPI/Migrations/20250929211742_InitialCreate.cs`
 
 ```csharp
 ﻿using System;
@@ -2298,7 +2957,7 @@ namespace TodoListAPI.Migrations
 
 ---
 
-### 📄 `Migrations/TodoListDbContextModelSnapshot.cs`
+### 📄 `TodoListAPI/Migrations/TodoListDbContextModelSnapshot.cs`
 
 ```csharp
 ﻿// <auto-generated />
@@ -2992,7 +3651,7 @@ namespace TodoListAPI.Migrations
 
 ---
 
-### 📄 `Models/ApplicationUser.cs`
+### 📄 `TodoListAPI/Models/ApplicationUser.cs`
 
 ```csharp
 using Microsoft.AspNetCore.Identity;
@@ -3020,7 +3679,7 @@ namespace TodoListAPI.Models
 
 ---
 
-### 📄 `Models/Project.cs`
+### 📄 `TodoListAPI/Models/Project.cs`
 
 ```csharp
 ﻿using System;
@@ -3060,7 +3719,7 @@ public partial class Project
 
 ---
 
-### 📄 `Models/Status.cs`
+### 📄 `TodoListAPI/Models/Status.cs`
 
 ```csharp
 ﻿using System;
@@ -3079,7 +3738,7 @@ public partial class Status
 
 ---
 
-### 📄 `Models/Task.cs`
+### 📄 `TodoListAPI/Models/Task.cs`
 
 ```csharp
 ﻿using System;
@@ -3123,7 +3782,7 @@ public partial class Task
 
 ---
 
-### 📄 `Models/TasksProject.cs`
+### 📄 `TodoListAPI/Models/TasksProject.cs`
 
 ```csharp
 ﻿using System;
@@ -3147,7 +3806,7 @@ public partial class TasksProject
 
 ---
 
-### 📄 `Models/TasksUser.cs`
+### 📄 `TodoListAPI/Models/TasksUser.cs`
 
 ```csharp
 ﻿using System;
@@ -3167,7 +3826,7 @@ public partial class TasksUser
 
 ---
 
-### 📄 `Models/Team.cs`
+### 📄 `TodoListAPI/Models/Team.cs`
 
 ```csharp
 ﻿using System;
@@ -3201,7 +3860,7 @@ public partial class Team
 
 ---
 
-### 📄 `Models/TodoListDbContext.cs`
+### 📄 `TodoListAPI/Models/TodoListDbContext.cs`
 
 ```csharp
 ﻿using System;
@@ -3427,7 +4086,7 @@ public partial class TodoListDbContext : IdentityDbContext<ApplicationUser>
 
 ---
 
-### 📄 `Models/UsersCommand.cs`
+### 📄 `TodoListAPI/Models/UsersCommand.cs`
 
 ```csharp
 ﻿using System;
@@ -3448,7 +4107,7 @@ public partial class UsersCommand
 
 ---
 
-### 📄 `Properties/launchSettings.json`
+### 📄 `TodoListAPI/Properties/launchSettings.json`
 
 ```json
 ﻿{
@@ -3496,7 +4155,7 @@ public partial class UsersCommand
 
 ---
 
-### 📄 `Services/AuthService.cs`
+### 📄 `TodoListAPI/Services/AuthService.cs`
 
 ```csharp
 using Microsoft.AspNetCore.Identity;
@@ -3568,7 +4227,7 @@ namespace TodoListAPI.Services
 
 ---
 
-### 📄 `Services/IAuthService.cs`
+### 📄 `TodoListAPI/Services/IAuthService.cs`
 
 ```csharp
 using Microsoft.AspNetCore.Identity;
@@ -3589,7 +4248,7 @@ namespace TodoListAPI.Services
 
 ---
 
-### 📄 `utils/gen-controllers.sh`
+### 📄 `TodoListAPI/utils/gen-controllers.sh`
 
 ```bash
 cd TodoListAPI
@@ -3606,7 +4265,7 @@ done
 
 ---
 
-### 📄 `utils/migrate.sh`
+### 📄 `TodoListAPI/utils/migrate.sh`
 
 ```bash
 dotnet ef dbcontext scaffold "Server=localhost\MSSQLSERVER01;Database=TodoListDB;Trusted_Connection=True;TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer --output-dir Models --no-onconfiguring
