@@ -1,14 +1,11 @@
 <template>
-    <button 
-    @click="addTask" 
-    class="bg-green-600 hover:bg-green-500 transition-colors rounded-xl px-3 py-2 text-white font-semibold">
-    Создать задачу</button>   
+    <button class="bg-green-600 hover:bg-green-500 transition-colors rounded-xl px-3 py-2 text-white font-semibold fade">
+    {{props.message}}</button>   
 </template>
 
 <script setup lang="ts">
-function addTask(event: Event){
-    console.log("Кнопка нажата!")
-};
+    import {ref} from "vue"
+    const props = defineProps(['message'])
 </script>
 
 <style scoped>

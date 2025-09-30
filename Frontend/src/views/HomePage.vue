@@ -1,24 +1,48 @@
 <template>
-  <AppButton></AppButton>
-  <div v-for="cur_task in tasks">
-    <CardTask 
-      :tittle = "cur_task.tittle"
-      :task = "cur_task.text_task"/>
-  </div>
+  <AppButton message='Создать задачу' @click="addTask"></AppButton>
+
+  <TransitionGroup name="fade" tag="div">
+    <CardTask
+      v-for="cur_task in tasks"
+      :key="cur_task.id"
+      :tittle="cur_task.tittle"
+      :task="cur_task.text_task"
+    />
+  </TransitionGroup>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import CardTask from '@/components/CardTask.vue'
-import AppButton from '@/components/ui/AppButton.vue';
+import AppButton from '@/components/ui/AppButton.vue'
 
-const tasks = ref([
-  { tittle: "Заголовок задачи 1",
-    text_task: "текст 1",
-  },
-])
+interface Task {
+  id: number;
+  tittle: string;
+  text_task: string;
+}
 
+const tasks = ref<Task[]>([])
+
+function addTask() {
+  console.log("Задача добавлена!")
+  tasks.value.push({
+    // FIXME: Тут дата чувак просто так попадает как id, временный костыль пока не прикручена API 
+    id: Date.now(), 
+    tittle: `Заголовок ${tasks.value.length + 1}`,
+    text_task: `текст ${tasks.value.length + 1}`
+  })
+}
 </script>
 
-<style>
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 </style>
