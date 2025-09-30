@@ -3,7 +3,7 @@
   <aside class="w-64 h-screen bg-gray-800 text-cyan-50 flex flex-col p-5">
     <!-- Логотип или название проекта -->
     <div class="text-2xl font-bold mb-10">
-      Мой Проект
+      To-Do-List
     </div>
     <nav>
       <ul>

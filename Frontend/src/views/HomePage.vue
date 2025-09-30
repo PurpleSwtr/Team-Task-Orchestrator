@@ -1,17 +1,23 @@
 <template>
-  <Button></Button>
-  <CardTask 
-    :tittle = "tittle"
-    :task = "task"/>
+  <AppButton></AppButton>
+  <div v-for="cur_task in tasks">
+    <CardTask 
+      :tittle = "cur_task.tittle"
+      :task = "cur_task.text_task"/>
+  </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import CardTask from '@/components/CardTask.vue'
-import Button from '@/components/ui/Button.vue';
-// 3. Объявляем переменные, чтобы Vue их "увидел"
-const tittle = ref("Мое первое задание");
-const task = ref("Нужно сделать X и Y.");
+import AppButton from '@/components/ui/AppButton.vue';
+
+const tasks = ref([
+  { tittle: "Заголовок задачи 1",
+    text_task: "текст 1",
+  },
+])
+
 </script>
 
 <style>
