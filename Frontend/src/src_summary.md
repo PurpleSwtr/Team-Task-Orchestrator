@@ -100,34 +100,17 @@ const props = defineProps({
     <div class="text-2xl font-bold mb-10">
       Мой Проект
     </div>
-
-    <!-- Навигационное меню -->
     <nav>
       <ul>
-        <li class="mb-4">
-          <!-- RouterLink - это специальный компонент Vue Router для навигации -->
+        <li v-for="item in items" class="mb-4">
           <RouterLink 
-            to="/" 
+            :to="item.route_path" 
             class="flex items-center p-2 rounded-lg hover:bg-gray-700 transition-colors"
           >
-            <!-- Здесь можно вставить иконку -->
-            <span>Главная</span>
-          </RouterLink>
-        </li>
-        <li>
-          <RouterLink 
-            to="/about" 
-            class="flex items-center p-2 rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            <span>О проекте</span>
-          </RouterLink>
-        </li>
-        <li>
-          <RouterLink 
-            to="/login" 
-            class="flex items-center p-2 rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            <span>Войти</span>
+            <HomeIcon v-if="item.icon === 'home'" class="w-6 h-6" />
+            <LoginIcon v-if="item.icon === 'login'" class="w-6 h-6" />
+            <AboutIcon v-if="item.icon === 'about'" class="w-6 h-6" />
+            <span class="ml-3">{{item.message}}</span>
           </RouterLink>
         </li>
       </ul>
@@ -138,6 +121,32 @@ const props = defineProps({
 <script setup lang="ts">
 // Импортируем RouterLink для использования в шаблоне
 import { RouterLink } from 'vue-router';
+import { ref } from 'vue';
+// В скрипте SideBar.vue
+import HomeIcon from '@/components/icons/HomeIcon.vue'
+import LoginIcon from '@/components/icons/LoginIcon.vue'
+import AboutIcon from '@/components/icons/AboutIcon.vue'
+
+// Теперь iconMap хранит не пути к файлам, а сами импортированные компоненты
+const iconMap = {
+  home: HomeIcon,
+  login: LoginIcon,
+  about: AboutIcon
+}
+
+let items = ref([
+  {message: "Главная", route_path: "/", icon: "home"},
+  {message: "Войти", route_path: "/login", icon: "login"},
+  {message: "О проекте", route_path: "/about", icon: "about"},
+
+])
+
+// let menuOptions = {
+//   "Главная": "/",
+//   "Войти": "/login",
+//   "О проекте": "/about",
+// }
+
 </script>
 
 <style>
@@ -147,6 +156,47 @@ import { RouterLink } from 'vue-router';
   font-weight: bold;
 }
 </style>
+```
+
+---
+
+### 📄 `components/icons/AboutIcon.vue`
+
+```vue
+<template>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+ <circle cx="12" cy="12" r="10"></circle>
+ <line x1="12" y1="16" x2="12" y2="12"></line>
+ <line x1="12" y1="8" x2="12.01" y2="8"></line>
+</svg>
+</template>
+```
+
+---
+
+### 📄 `components/icons/HomeIcon.vue`
+
+```vue
+<template>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+  </svg>
+</template>
+```
+
+---
+
+### 📄 `components/icons/LoginIcon.vue`
+
+```vue
+<template>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+ <polyline points="10 17 15 12 10 7"></polyline>
+ <line x1="15" y1="12" x2="3" y2="12"></line>
+</svg>
+</template>
 ```
 
 ---
@@ -265,11 +315,25 @@ const task = ref("Нужно сделать X и Y.");
 
 ```vue
 <template>
-<input type="email">
-<input type="password">
+  <div class="min-h-screen flex items-center justify-center">
+    <div class="flex flex-col items-center w-full max-w-md">
+      <h1 class="text-3xl font-bold mb-6">Страница входа</h1>
+      <div class="flex flex-col gap-4 w-full">
+        <input 
+          type="email" 
+          placeholder="Email" 
+          class="p-2 border rounded"
+        >
+        <input 
+          type="password" 
+          placeholder="Пароль" 
+          class="p-2 border rounded"
+        >
+        <button class="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+          Войти
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
-
-<script setup>
-
-</script>
 ```
