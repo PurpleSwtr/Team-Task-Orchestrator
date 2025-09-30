@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainLayout from '../layouts/MainLayout.vue'
 import HomePage from '../views/HomePage.vue'
-import AboutPage from '../views/AboutPage.vue' // 👈 1. Импортируем новую страницу
+import AboutPage from '../views/AboutPage.vue'
+import LogRegPage from '../views/LogRegPage.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,6 +22,12 @@ const router = createRouter({
           name: 'about',  
           component: AboutPage,
         },
+                {
+          path: 'login', 
+          name: 'login',  
+          component: LogRegPage,
+        },
+
       ],
     },
   ],

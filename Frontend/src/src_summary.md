@@ -90,6 +90,67 @@ const props = defineProps({
 
 ---
 
+### 📄 `components/features/SideBar.vue`
+
+```vue
+<template>
+  <!-- Используем тег aside для семантики и классы Tailwind CSS для стилизации -->
+  <aside class="w-64 h-screen bg-gray-800 text-white flex flex-col p-5">
+    <!-- Логотип или название проекта -->
+    <div class="text-2xl font-bold mb-10">
+      Мой Проект
+    </div>
+
+    <!-- Навигационное меню -->
+    <nav>
+      <ul>
+        <li class="mb-4">
+          <!-- RouterLink - это специальный компонент Vue Router для навигации -->
+          <RouterLink 
+            to="/" 
+            class="flex items-center p-2 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <!-- Здесь можно вставить иконку -->
+            <span>Главная</span>
+          </RouterLink>
+        </li>
+        <li>
+          <RouterLink 
+            to="/about" 
+            class="flex items-center p-2 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <span>О проекте</span>
+          </RouterLink>
+        </li>
+        <li>
+          <RouterLink 
+            to="/login" 
+            class="flex items-center p-2 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <span>Войти</span>
+          </RouterLink>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+</template>
+
+<script setup lang="ts">
+// Импортируем RouterLink для использования в шаблоне
+import { RouterLink } from 'vue-router';
+</script>
+
+<style>
+/* Стили для активной ссылки */
+.router-link-exact-active {
+  background-color: #4A5568; /* bg-gray-700 */
+  font-weight: bold;
+}
+</style>
+```
+
+---
+
 ### 📄 `layouts/MainLayout.vue`
 
 ```vue
@@ -118,19 +179,60 @@ import SideBar from '@/components/features/SideBar.vue'
 
 ```typescript
 import { createRouter, createWebHistory } from 'vue-router'
+import MainLayout from '../layouts/MainLayout.vue'
 import HomePage from '../views/HomePage.vue'
+import AboutPage from '../views/AboutPage.vue'
+import LogRegPage from '../views/LogRegPage.vue'
+
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomePage,
+      component: MainLayout, // 👈 2. Устанавливаем MainLayout как обертку
+      children: [ // 👈 3. Все дочерние маршруты будут отображаться внутри MainLayout
+        {
+          path: '', // Пустой путь для главной страницы ('/')
+          name: 'home',
+          component: HomePage,
+        },
+        {
+          path: 'about', // Путь для страницы "О проекте" ('/about')
+          name: 'about',  
+          component: AboutPage,
+        },
+                {
+          path: 'login', 
+          name: 'login',  
+          component: LogRegPage,
+        },
+
+      ],
     },
   ],
 })
 
 export default router
+```
+
+---
+
+### 📄 `views/AboutPage.vue`
+
+```vue
+<template>
+  <div>
+    <h1 class="text-3xl font-bold">О проекте</h1>
+    <p class="mt-4">
+      Это простое приложение для демонстрации работы Sidebar и Vue Router.
+    </p>
+  </div>
+</template>
+
+<script setup lang="ts">
+// Для этой простой страницы логика не нужна
+</script>
 ```
 
 ---
@@ -155,4 +257,19 @@ const task = ref("Нужно сделать X и Y.");
 
 <style>
 </style>
+```
+
+---
+
+### 📄 `views/LogRegPage.vue`
+
+```vue
+<template>
+<input type="email">
+<input type="password">
+</template>
+
+<script setup>
+
+</script>
 ```

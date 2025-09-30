@@ -27,6 +27,14 @@
             <span>О проекте</span>
           </RouterLink>
         </li>
+        <li>
+          <RouterLink 
+            to="/login" 
+            class="flex items-center p-2 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <span>Войти</span>
+          </RouterLink>
+        </li>
       </ul>
     </nav>
   </aside>
