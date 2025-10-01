@@ -24,23 +24,26 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
 import { ref } from 'vue';
-// 👇 1. Импортируй тип Component из vue
+
 import { type Component } from 'vue'; 
 import HomeIcon from '@/components/icons/HomeIcon.vue';
 import LoginIcon from '@/components/icons/LoginIcon.vue';
 import AboutIcon from '@/components/icons/AboutIcon.vue';
+import GeneratorIcon from '../icons/GeneratorIcon.vue';
 
-// 👇 2. Укажи тип для iconMap
 const iconMap: { [key: string]: Component } = {
   home: HomeIcon,
   login: LoginIcon,
-  about: AboutIcon
+  about: AboutIcon,
+  generator: GeneratorIcon
 };
 
 let items = ref([
   {message: "Главная", route_path: "/", icon: "home"},
   {message: "Войти", route_path: "/login", icon: "login"},
   {message: "О проекте", route_path: "/about", icon: "about"},
+  {message: "Генератор", route_path: "/generator", icon: "generator"},
+
 ]);
 
 </script>

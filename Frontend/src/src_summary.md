@@ -120,23 +120,26 @@ import TaskIcon from '@/components/icons/TaskIcon.vue'
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
 import { ref } from 'vue';
-// 👇 1. Импортируй тип Component из vue
+
 import { type Component } from 'vue'; 
 import HomeIcon from '@/components/icons/HomeIcon.vue';
 import LoginIcon from '@/components/icons/LoginIcon.vue';
 import AboutIcon from '@/components/icons/AboutIcon.vue';
+import GeneratorIcon from '../icons/GeneratorIcon.vue';
 
-// 👇 2. Укажи тип для iconMap
 const iconMap: { [key: string]: Component } = {
   home: HomeIcon,
   login: LoginIcon,
-  about: AboutIcon
+  about: AboutIcon,
+  generator: GeneratorIcon
 };
 
 let items = ref([
   {message: "Главная", route_path: "/", icon: "home"},
   {message: "Войти", route_path: "/login", icon: "login"},
   {message: "О проекте", route_path: "/about", icon: "about"},
+  {message: "Генератор", route_path: "/generator", icon: "generator"},
+
 ]);
 
 </script>
@@ -161,6 +164,17 @@ let items = ref([
  <line x1="12" y1="16" x2="12" y2="12"></line>
  <line x1="12" y1="8" x2="12.01" y2="8"></line>
 </svg>
+</template>
+```
+
+---
+
+### 📄 `components/icons/GeneratorIcon.vue`
+
+```vue
+<template>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" d="M6 3a2 2 0 0 0-2 2v11h2v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h6v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h2V5a2 2 0 0 0-2-2H6m6 4V5h6v2h-6m0 2h6v2h-6V9M8 5v4h2l-3 6v-4H5l3-6m14 15v2H2v-2h20Z"/>
+    </svg>
 </template>
 ```
 
@@ -212,11 +226,23 @@ let items = ref([
 
 ```vue
 <template>
-    <button class="bg-green-600 hover:bg-green-500 transition-colors rounded-xl px-3 py-2 text-white font-semibold">
-    Создать задачу</button>   
+    <button class="bg-green-600 hover:bg-green-500 transition-colors rounded-xl px-3 py-2 text-white font-semibold fade">
+    <span v-if="!props.status">{{props.message}}</span>
+    <span v-else>
+        Загрузка...
+    </span>
+    </button>
+
 </template>
 
 <script setup lang="ts">
+    import {ref} from "vue"
+    const props = defineProps(['message', 'status'])
+
+    // const props = defineProps<{
+    //     message: string
+    //     status?: boolean
+    // }>()
 
 </script>
 
@@ -259,6 +285,7 @@ import MainLayout from '../layouts/MainLayout.vue'
 import HomePage from '../views/HomePage.vue'
 import AboutPage from '../views/AboutPage.vue'
 import LogRegPage from '../views/LogRegPage.vue'
+import GeneratorPage from '../views/GeneratorPage.vue'
 
 
 const router = createRouter({
@@ -278,12 +305,16 @@ const router = createRouter({
           name: 'about',  
           component: AboutPage,
         },
-                {
+        {
           path: 'login', 
           name: 'login',  
           component: LogRegPage,
         },
-
+        {
+          path: 'generator', 
+          name: 'generator',  
+          component: GeneratorPage,
+        },
       ],
     },
   ],
@@ -309,16 +340,55 @@ export default router
 
 ---
 
+### 📄 `views/GeneratorPage.vue`
+
+```vue
+<template>
+
+    <select v-model="selected" class="border rounded mr-4 py-1">
+        <option disabled value="">Выберите таблицу</option>
+        <option v-for="table in tables">{{table}}</option>
+    </select>
+
+    <input type="number" class="border rounded mr-4 py-1" placeholder="Количество генераций">
+
+
+    <AppButton message='Сгенерировать' @click="GenStart"></AppButton>
+
+</template>
+
+<script setup lang="ts">
+import AppButton from '@/components/ui/AppButton.vue';
+import {ref} from 'vue'
+let selected = ref('')
+const tables = ref(['Задачи', 'Пользователи', 'Команды', 'Роли'])
+function GenStart() {
+// Будем отправлять в апишку данные наших плейсхолдеорв
+};
+
+</script>
+
+<style scoped>
+
+</style>
+```
+
+---
+
 ### 📄 `views/HomePage.vue`
 
 ```vue
 <template>
-  <AppButton @click="addTask"></AppButton>
-  <div v-for="cur_task in tasks">
-    <CardTask 
-      :tittle = "cur_task.tittle"
-      :task = "cur_task.text_task"/>
-  </div>
+  <AppButton message='Создать задачу' status="true" @click="addTask"></AppButton>
+
+  <TransitionGroup name="fade" tag="div">
+    <CardTask
+      v-for="cur_task in tasks"
+      :key="cur_task.id"
+      :tittle="cur_task.tittle"
+      :task="cur_task.text_task"
+    />
+  </TransitionGroup>
 </template>
 
 <script setup lang="ts">
@@ -326,27 +396,35 @@ import { ref } from 'vue'
 import CardTask from '@/components/CardTask.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 
-// 3. Создаем interface, который описывает объект задачи
 interface Task {
+  id: number;
   tittle: string;
   text_task: string;
-  // в будущем сюда можно будет добавить id: number, completed: boolean и т.д.
 }
 
-// 4. Указываем, что `tasks` - это ref, содержащий МАССИВ объектов типа Task
 const tasks = ref<Task[]>([])
 
-// 5. Убираем неиспользуемый `event`, чтобы код был чище
 function addTask() {
   console.log("Задача добавлена!")
-  tasks.value.push({ 
+  tasks.value.push({
+    // FIXME: Тут дата чувак просто так попадает как id, временный костыль пока не прикручена API 
+    id: Date.now(), 
     tittle: `Заголовок ${tasks.value.length + 1}`,
     text_task: `текст ${tasks.value.length + 1}`
   })
 }
 </script>
 
-<style>
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 </style>
 ```
 
@@ -377,4 +455,11 @@ function addTask() {
     </div>
   </div>
 </template>
+
+<style>
+.placeholder-email{
+  padding: 2;
+  border: rounded;
+}
+</style>
 ```

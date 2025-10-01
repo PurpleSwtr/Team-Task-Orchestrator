@@ -1,5 +1,5 @@
 <template>
-  <AppButton message='Создать задачу' @click="addTask"></AppButton>
+  <AppButton message='Создать задачу' :statusLoading="buttonLoading" @click="addTask"></AppButton>
 
   <TransitionGroup name="fade" tag="div">
     <CardTask
@@ -23,8 +23,8 @@ interface Task {
 }
 
 const tasks = ref<Task[]>([])
-
-function addTask() {
+const buttonLoading = ref(false)
+function addTask(event: Event) {
   console.log("Задача добавлена!")
   tasks.value.push({
     // FIXME: Тут дата чувак просто так попадает как id, временный костыль пока не прикручена API 
@@ -32,6 +32,8 @@ function addTask() {
     tittle: `Заголовок ${tasks.value.length + 1}`,
     text_task: `текст ${tasks.value.length + 1}`
   })
+  buttonLoading.value = !buttonLoading.value
+  event.target?.dispatchEvent
 }
 </script>
 

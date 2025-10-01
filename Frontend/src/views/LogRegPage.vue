@@ -20,3 +20,10 @@
     </div>
   </div>
 </template>
+
+<style>
+.placeholder-email{
+  padding: 2;
+  border: rounded;
+}
+</style>
