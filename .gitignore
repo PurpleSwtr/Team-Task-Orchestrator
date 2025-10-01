@@ -1,1 +1,71 @@
 Storybook/
+db-password.env
+
+# ===================================================================
+# Fichiers secrets et de configuration locale
+# NE JAMAIS METTRE DE MOTS DE PASSE OU DE CLÉS D'API DANS GIT !
+# ===================================================================
+*.env.local
+.env
+
+# ===================================================================
+# Dépendances et artefacts de construction
+# Les dépendances doivent être installées, pas stockées dans Git.
+# Les artefacts sont générés à partir du code source.
+# ===================================================================
+
+# Backend - .NET/ASP.NET Core
+TodoListAPI/bin/
+TodoListAPI/obj/
+
+# Frontend - Node.js
+Frontend/node_modules/
+Frontend/dist/
+Frontend/dist-ssr/
+Frontend/coverage/
+Frontend/.DS_Store
+Frontend/npm-debug.log*
+Frontend/yarn-debug.log*
+Frontend/yarn-error.log*
+Frontend/pnpm-debug.log*
+Frontend/lerna-debug.log*
+Frontend/*.tsbuildinfo
+
+# ===================================================================
+# Fichiers générés par l'IDE et l'éditeur
+# Ces fichiers sont spécifiques à l'environnement de développement local de chaque utilisateur.
+# ===================================================================
+
+# Visual Studio / Rider
+.vs/
+*.user
+*.suo
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/*
+# Ne pas ignorer les paramètres et les extensions recommandés pour le projet
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains (Rider, WebStorm, etc.)
+.idea/
+
+# ===================================================================
+# Fichiers du système d'exploitation
+# Fichiers inutiles générés par macOS, Windows et Linux.
+# ===================================================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ===================================================================
+# Fichiers de log
+# ===================================================================
+*.log
+logs/
