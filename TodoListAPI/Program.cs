@@ -1,25 +1,23 @@
 using TodoListAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using TodoListAPI.Services; // <-- Добавляем using для сервисов
-using Microsoft.AspNetCore.Authentication.JwtBearer; // <-- Добавляем using для JWT
-using Microsoft.IdentityModel.Tokens; // <-- Добавляем using для токенов
-using System.Text; // <-- Добавляем using для кодировки
+using TodoListAPI.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-var configuration = builder.Configuration; // <-- Получаем доступ к конфигурации
+var configuration = builder.Configuration;
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<TodoListDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Настраиваем Identity
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>() // <-- Можно добавить IdentityRole, если нужны роли
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<TodoListDbContext>()
     .AddDefaultTokenProviders();
 
-// === НАСТРОЙКА JWT АУТЕНТИФИКАЦИИ ===
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -39,9 +37,7 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
     };
 });
-// ===================================
 
-// Регистрируем наш сервис
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddControllers();
@@ -50,13 +46,34 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// --- НАЧАЛО НОВОГО БЛОКА: АВТОМАТИЧЕСКОЕ ПРИМЕНЕНИЕ МИГРАЦИЙ ---
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var dbContext = services.GetRequiredService<TodoListDbContext>();
+        // Эта команда проверяет, существуют ли миграции и применяет их.
+        // Если база данных не существует, она будет создана.
+        dbContext.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        // В реальном проекте здесь нужно логировать ошибку
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+        // Можно остановить приложение, если база недоступна
+        // throw; 
+    }
+}
+// --- КОНЕЦ НОВОГО БЛОКА ---
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Включаем аутентификацию и авторизацию. Порядок важен!
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -1,35 +1,32 @@
 services:
-  server:
+  # Сервис для нашего .NET API
+  todolist-api: # <-- 1. Имя сервиса стало более осмысленным
+    container_name: todolist-api-container # <-- 2. Задаем статичное и понятное имя контейнера
     build:
       context: .
-      target: final
+      dockerfile: ./TodoListAPI/Dockerfile # <-- Указываем НОВЫЙ путь к Dockerfile
     ports:
       - "8080:8080"
     environment:
-      - ConnectionStrings__DefaultConnection=Server=db;Database=TodoListDB;User Id=sa;Password=${DB_SA_PASSWORD};TrustServerCertificate=True;
+      # 3. ВАЖНО: Имя хоста базы данных теперь 'todolist-db', как имя сервиса ниже
+      - ConnectionStrings__DefaultConnection=Server=todolist-db;Database=TodoListDB;User Id=sa;Password=${DB_SA_PASSWORD};TrustServerCertificate=True;
       - Jwt__Key=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
-      db:
-        condition: service_healthy
+      - todolist-db # <-- 4. Указываем зависимость от сервиса с новым именем
 
-  db:
-    build:
-      context: ./database-setup
-      dockerfile: Dockerfile
+  # Сервис для базы данных MS SQL Server
+  todolist-db: # <-- 1. Имя сервиса стало более осмысленным
+    container_name: todolist-mssql-container # <-- 2. Задаем статичное и понятное имя контейнера
+    image: mcr.microsoft.com/mssql/server:2022-latest # <-- 5. Используем официальный образ напрямую
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=${DB_SA_PASSWORD}
+      - SA_PASSWORD=${DB_SA_PASSWORD} # Переменная берется из .env
     ports:
       - "1433:1433"
     volumes:
-      - db-data:/var/opt/mssql
-    healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P '${DB_SA_PASSWORD}' -Q 'SELECT 1' || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      - todolist-db-data:/var/opt/mssql # <-- 6. Том для данных тоже переименован
 
+# Раздел для именованных томов
 volumes:
-  db-data:
+  todolist-db-data: {} # <-- 6. Объявляем наш переименованный том

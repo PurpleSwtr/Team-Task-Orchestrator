@@ -123,57 +123,31 @@ logs/
 ```dockerfile
 # syntax=docker/dockerfile:1
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
+# --- Стадия сборки ---
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+WORKDIR /source
 
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
+# 1. Копируем только файлы проектов и восстанавливаем зависимости
+# Этот слой будет кешироваться, пока ты не изменишь .csproj или .sln
+COPY *.sln .
+COPY TodoListAPI/*.csproj ./TodoListAPI/
+RUN dotnet restore "./TodoListAPI/TodoListAPI.csproj"
 
-################################################################################
+# 2. Копируем все остальное
+COPY . .
 
-# Learn about building .NET container images:
-# https://github.com/dotnet/dotnet-docker/blob/main/samples/README.md
-
-# Create a stage for building the application.
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
-
-COPY . /source
-
-WORKDIR /source/TodoListAPI
-
-# This is the architecture you’re building for, which is passed in by the builder.
-# Placing it here allows the previous steps to be cached across architectures.
+# 3. Публикуем приложение
+WORKDIR "/source/TodoListAPI"
+# Аргумент TARGETARCH нужен для кросс-платформенной сборки (например, на Mac M1 для Linux/amd64)
 ARG TARGETARCH
+RUN dotnet publish TodoListAPI.csproj -a ${TARGETARCH/amd64/x64} --use-current-runtime --self-contained false -o /app
 
-# Build the application.
-# Leverage a cache mount to /root/.nuget/packages so that subsequent builds don't have to re-download packages.
-# If TARGETARCH is "amd64", replace it with "x64" - "x64" is .NET's canonical name for this and "amd64" doesn't
-#   work in .NET 6.0.
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
-    dotnet publish -a ${TARGETARCH/amd64/x64} --use-current-runtime --self-contained false -o /app
-
-# If you need to enable globalization and time zones:
-# https://github.com/dotnet/dotnet-docker/blob/main/samples/enable-globalization.md
-################################################################################
-# Create a new stage for running the application that contains the minimal
-# runtime dependencies for the application. This often uses a different base
-# image from the build stage where the necessary files are copied from the build
-# stage.
-#
-# The example below uses an aspnet alpine image as the foundation for running the app.
-# It will also use whatever happens to be the most recent version of that tag when you
-# build your Dockerfile. If reproducibility is important, consider using a more specific
-# version (e.g., aspnet:7.0.10-alpine-3.18),
-# or SHA (e.g., mcr.microsoft.com/dotnet/aspnet@sha256:f3d99f54d504a21d38e4cc2f13ff47d67235efeeb85c109d3d1ff1808b38d034).
+# --- Финальная стадия ---
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app
-
-# Copy everything needed to run the app from the "build" stage.
 COPY --from=build /app .
 
-# Switch to a non-privileged user (defined in the base image) that the app will run under.
-# See https://docs.docker.com/go/dockerfile-user-best-practices/
-# and https://github.com/dotnet/dotnet-docker/discussions/4764
+# Хорошая практика по безопасности
 USER $APP_UID
 
 ENTRYPOINT ["dotnet", "TodoListAPI.dll"]
@@ -244,65 +218,37 @@ docs for more detail on building and pushing.
 
 ```yaml
 services:
-  server:
+  # Сервис для нашего .NET API
+  todolist-api: # <-- 1. Имя сервиса стало более осмысленным
+    container_name: todolist-api-container # <-- 2. Задаем статичное и понятное имя контейнера
     build:
       context: .
-      target: final
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     environment:
-      - ConnectionStrings__DefaultConnection=Server=db;Database=TodoListDB;User Id=sa;Password=${DB_SA_PASSWORD};TrustServerCertificate=True;
+      # 3. ВАЖНО: Имя хоста базы данных теперь 'todolist-db', как имя сервиса ниже
+      - ConnectionStrings__DefaultConnection=Server=todolist-db;Database=TodoListDB;User Id=sa;Password=${DB_SA_PASSWORD};TrustServerCertificate=True;
       - Jwt__Key=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
-      db:
-        condition: service_healthy
+      - todolist-db # <-- 4. Указываем зависимость от сервиса с новым именем
 
-  db:
-    build:
-      context: ./database-setup
-      dockerfile: Dockerfile
+  # Сервис для базы данных MS SQL Server
+  todolist-db: # <-- 1. Имя сервиса стало более осмысленным
+    container_name: todolist-mssql-container # <-- 2. Задаем статичное и понятное имя контейнера
+    image: mcr.microsoft.com/mssql/server:2022-latest # <-- 5. Используем официальный образ напрямую
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=${DB_SA_PASSWORD}
+      - SA_PASSWORD=${DB_SA_PASSWORD} # Переменная берется из .env
     ports:
       - "1433:1433"
     volumes:
-      - db-data:/var/opt/mssql
-    healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S 127.0.0.1 -U sa -P '${DB_SA_PASSWORD}' -Q 'SELECT 1' || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      - todolist-db-data:/var/opt/mssql # <-- 6. Том для данных тоже переименован
 
+# Раздел для именованных томов
 volumes:
-  db-data:
-```
-
----
-
-### 📄 `database-setup/Dockerfile`
-
-```dockerfile
-FROM mcr.microsoft.com/mssql/server:2022-latest
-
-USER root
-
-
-RUN apt-get update && apt-get install -y curl gnupg apt-transport-https
-
-
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
-    && curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
-
-
-RUN apt-get update \
-    && ACCEPT_EULA=Y apt-get install -y mssql-tools unixodbc-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-
-USER mssql
+  todolist-db-data: {} # <-- 6. Объявляем наш переименованный том
 ```
 
 ---
