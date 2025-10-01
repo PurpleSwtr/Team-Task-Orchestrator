@@ -1,7 +1,7 @@
 <template>
   <AppButton message='Создать задачу' :statusLoading="buttonLoading" @click="addTask"></AppButton>
 
-  <TransitionGroup name="fade" tag="div">
+  <TransitionGroup name="fade" tag="div" class="grid grid-cols-3">
     <CardTask
       v-for="cur_task in tasks"
       :key="cur_task.id"
@@ -27,13 +27,11 @@ const buttonLoading = ref(false)
 function addTask(event: Event) {
   console.log("Задача добавлена!")
   tasks.value.push({
-    // FIXME: Тут дата чувак просто так попадает как id, временный костыль пока не прикручена API 
     id: Date.now(), 
     tittle: `Заголовок ${tasks.value.length + 1}`,
     text_task: `текст ${tasks.value.length + 1}`
   })
-  buttonLoading.value = !buttonLoading.value
-  event.target?.dispatchEvent
+  // buttonLoading.value = !buttonLoading.value
 }
 </script>
 

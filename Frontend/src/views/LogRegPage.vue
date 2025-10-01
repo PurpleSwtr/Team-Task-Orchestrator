@@ -6,14 +6,14 @@
         <input 
           type="email" 
           placeholder="Email" 
-          class="p-2 border rounded"
+          class="bg-white p-2 mx-20 border-2 rounded border-gray-300 border-b-blue-400 outline-blue-600"
         >
         <input 
           type="password" 
           placeholder="Пароль" 
-          class="p-2 border rounded"
+          class="bg-white p-2 mx-20 border-2 rounded border-gray-300 border-b-blue-400 outline-blue-600"
         >
-        <button class="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+        <button class="p-2 bg-blue-500 mx-40 text-white rounded hover:bg-blue-600">
           Войти
         </button>
       </div>
@@ -22,8 +22,5 @@
 </template>
 
 <style>
-.placeholder-email{
-  padding: 2;
-  border: rounded;
-}
+
 </style>

@@ -3,10 +3,12 @@ import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <!-- Здесь будет отображаться содержимое наших будущих страниц -->
-  <RouterView />
+  <RouterView class="app"/>
 </template>
 
 <style scoped>
 /* Стили пока оставим пустыми */
+.app{
+background-color: #e8e8e8;
+}
 </style>
