@@ -8,7 +8,6 @@
       "presentation": {
         "group": "group1",
         "panel": "dedicated",
-        "name": "Docker"
       },
       "problemMatcher": []
     },
@@ -20,14 +19,10 @@
       "presentation": {
         "group": "group2",
         "panel": "dedicated",
-        "name": "NPM"
       },
-      // *** УМНОЕ ОЖИДАНИЕ ВМЕСТО ПАУЗЫ ***
-      // Этот блок ищет в выводе консоли строку о готовности Vite
       "problemMatcher": {
         "owner": "vite",
         "pattern": {
-          // Регулярное выражение, которое ищет строку, содержащую "VITE" и "ready"
           "regexp": ".*(VITE).*ready.*",
           "file": 1,
           "location": 2,
@@ -35,7 +30,6 @@
         },
         "background": {
           "activeOnStart": true,
-          // Когда VSCode увидит строку, подходящую под regexp, он посчитает задачу "готовой"
           "beginsPattern": ".*VITE.*",
           "endsPattern": ".*VITE.*ready.*"
         }
@@ -44,17 +38,7 @@
     {
       "label": "Open Browser",
       "type": "shell",
-      // *** ЗАДЕРЖКА БОЛЬШЕ НЕ НУЖНА ***
-      // Команды запускаются сразу, без sleep или timeout
-      // Для Windows:
       "command": "start chrome 'http://localhost:8080/swagger/index.html' && start chrome 'http://localhost:5173/'",
-
-      // Для macOS:
-      // "command": "open -a 'Google Chrome' 'http://localhost:8080/swagger/index.html' && open -a 'Google Chrome' 'http://localhost:5173/login'",
-      
-      // Для Linux:
-      // "command": "google-chrome 'http://localhost:8080/swagger/index.html' 'http://localhost:5173/login'",
-      
       "problemMatcher": []
     },
     {

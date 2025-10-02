@@ -3,10 +3,25 @@
     <div class="text-2xl font-bold mb-10">
       To-Do-List
     </div>
-    <nav>
+    
+    <nav class="flex flex-col flex-1">
+      <ul class="flex-1">
+        <li v-for="item in items" :key="item.route_path" class="mb-4">
+          <MenuButton 
+            :message="item.message" 
+            :icon="item.icon" 
+            :route_path="item.route_path"
+          ></MenuButton>
+        </li>
+      </ul>
+      <div class="border-t border-gray-500 my-4"></div>
       <ul>
-        <li v-for="item in items" class="mb-4">
-          <MenuButton :message="item.message" :icon="item.icon" :route_path="item.route_path"></MenuButton>
+        <li class="mb-15">
+          <MenuButton 
+            message="Настройки" 
+            icon="settings" 
+            route_path="/settings"
+          ></MenuButton>
         </li>
       </ul>
     </nav>
