@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using TodoListAPI.Services; // <-- Используем наш сервис
-
+using TodoListAPI.Models.DTO; // <-- Не забудь добавить этот using!
 namespace TodoListAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -29,9 +29,10 @@ namespace TodoListAPI.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(string email, string password)
+        public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            var token = await _authService.LoginUserAsync(email, password);
+            // Теперь мы берем email и password из модели
+            var token = await _authService.LoginUserAsync(model.Email, model.Password);
 
             if (token != null)
             {

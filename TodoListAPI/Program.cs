@@ -5,14 +5,36 @@ using TodoListAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.Data.SqlClient;
+
+// НЕ ИСПОЛЬЗУЕМ using Task = System.Threading.Tasks.Task;
+
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy  =>
+                      {
+                          policy.WithOrigins("http://localhost:5173")
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+                      });
+});
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<TodoListDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString, sqlServerOptionsAction: sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null);
+    }));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<TodoListDbContext>()
@@ -39,34 +61,49 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// --- НАЧАЛО НОВОГО БЛОКА: АВТОМАТИЧЕСКОЕ ПРИМЕНЕНИЕ МИГРАЦИЙ ---
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    try
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    var dbContext = services.GetRequiredService<TodoListDbContext>();
+
+    bool dbReady = false;
+    int retries = 0;
+    const int maxRetries = 10;
+
+    while (!dbReady && retries < maxRetries)
     {
-        var dbContext = services.GetRequiredService<TodoListDbContext>();
-        // Эта команда проверяет, существуют ли миграции и применяет их.
-        // Если база данных не существует, она будет создана.
-        dbContext.Database.Migrate();
+        try
+        {
+            if (await dbContext.Database.CanConnectAsync())
+            {
+                dbReady = true;
+                logger.LogInformation("Database is ready. Applying migrations...");
+                await dbContext.Database.MigrateAsync();
+                logger.LogInformation("Migrations applied successfully.");
+            }
+        }
+        catch (SqlException)
+        {
+            retries++;
+            logger.LogWarning("Database is not ready yet. Waiting... (Attempt {Attempt})", retries);
+            // Явно указываем полный путь к классу Task
+            await System.Threading.Tasks.Task.Delay(5000);
+        }
     }
-    catch (Exception ex)
+
+    if (!dbReady)
     {
-        // В реальном проекте здесь нужно логировать ошибку
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
-        // Можно остановить приложение, если база недоступна
-        // throw; 
+        logger.LogError("Database could not be reached after {MaxRetries} attempts. Application is shutting down.", maxRetries);
+        return; 
     }
 }
-// --- КОНЕЦ НОВОГО БЛОКА ---
 
 if (app.Environment.IsDevelopment())
 {
@@ -74,6 +111,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors(MyAllowSpecificOrigins);
+
+// Возвращаем аутентификацию на место
 app.UseAuthentication();
 app.UseAuthorization();
 

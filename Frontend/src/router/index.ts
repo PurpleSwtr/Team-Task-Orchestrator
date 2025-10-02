@@ -11,15 +11,15 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      component: MainLayout, // 👈 2. Устанавливаем MainLayout как обертку
-      children: [ // 👈 3. Все дочерние маршруты будут отображаться внутри MainLayout
+      component: MainLayout, 
+      children: [ 
         {
-          path: '', // Пустой путь для главной страницы ('/')
+          path: '', 
           name: 'home',
           component: HomePage,
         },
         {
-          path: 'about', // Путь для страницы "О проекте" ('/about')
+          path: 'about',
           name: 'about',  
           component: AboutPage,
         },

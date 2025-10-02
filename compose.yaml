@@ -1,19 +1,18 @@
 services:
-  # Сервис для нашего .NET API
-  todolist-api: # <-- 1. Имя сервиса стало более осмысленным
-    container_name: todolist-api-container # <-- 2. Задаем статичное и понятное имя контейнера
+  todolist-api:
+    container_name: todolist-api-container
     build:
       context: .
-      dockerfile: ./TodoListAPI/Dockerfile # <-- Указываем НОВЫЙ путь к Dockerfile
+      dockerfile: ./TodoListAPI/Dockerfile
     ports:
       - "8080:8080"
     environment:
-      # 3. ВАЖНО: Имя хоста базы данных теперь 'todolist-db', как имя сервиса ниже
+      # УДАЛЯЕМ ОТСЮДА СТРОКУ ПРО JWT_KEY
       - ConnectionStrings__DefaultConnection=Server=todolist-db;Database=TodoListDB;User Id=sa;Password=${DB_SA_PASSWORD};TrustServerCertificate=True;
-      - Jwt__Key=${JWT_KEY}
+      - Jwt__Key=${JWT_KEY} # <-- РАСКОММЕНТИРУЙ
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
-      - todolist-db # <-- 4. Указываем зависимость от сервиса с новым именем
+      - todolist-db
 
   # Сервис для базы данных MS SQL Server
   todolist-db: # <-- 1. Имя сервиса стало более осмысленным
