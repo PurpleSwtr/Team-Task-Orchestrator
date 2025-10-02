@@ -5,36 +5,14 @@ using TodoListAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.Data.SqlClient;
-
-// НЕ ИСПОЛЬЗУЕМ using Task = System.Threading.Tasks.Task;
-
-var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(name: MyAllowSpecificOrigins,
-                      policy  =>
-                      {
-                          policy.WithOrigins("http://localhost:5173")
-                                .AllowAnyHeader()
-                                .AllowAnyMethod();
-                      });
-});
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<TodoListDbContext>(options =>
-    options.UseSqlServer(connectionString, sqlServerOptionsAction: sqlOptions =>
-    {
-        sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(30),
-            errorNumbersToAdd: null);
-    }));
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<TodoListDbContext>()
@@ -60,6 +38,19 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// --- 1. ДОБАВЛЯЕМ СЕРВИС CORS ---
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowVueApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173") // URL вашего фронтенда
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+// ------------------------------------
+
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -70,38 +61,15 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var logger = services.GetRequiredService<ILogger<Program>>();
-    var dbContext = services.GetRequiredService<TodoListDbContext>();
-
-    bool dbReady = false;
-    int retries = 0;
-    const int maxRetries = 10;
-
-    while (!dbReady && retries < maxRetries)
+    try
     {
-        try
-        {
-            if (await dbContext.Database.CanConnectAsync())
-            {
-                dbReady = true;
-                logger.LogInformation("Database is ready. Applying migrations...");
-                await dbContext.Database.MigrateAsync();
-                logger.LogInformation("Migrations applied successfully.");
-            }
-        }
-        catch (SqlException)
-        {
-            retries++;
-            logger.LogWarning("Database is not ready yet. Waiting... (Attempt {Attempt})", retries);
-            // Явно указываем полный путь к классу Task
-            await System.Threading.Tasks.Task.Delay(5000);
-        }
+        var context = services.GetRequiredService<TodoListDbContext>();
+        context.Database.Migrate();
     }
-
-    if (!dbReady)
+    catch (Exception ex)
     {
-        logger.LogError("Database could not be reached after {MaxRetries} attempts. Application is shutting down.", maxRetries);
-        return; 
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Произошла ошибка во время миграции базы данных.");
     }
 }
 
@@ -111,9 +79,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors(MyAllowSpecificOrigins);
+// --- 2. ВКЛЮЧАЕМ MIDDLEWARE ДЛЯ CORS ---
+// Важно: UseCors() должен быть вызван ДО UseAuthentication() и UseAuthorization()
+app.UseCors("AllowVueApp");
+// ----------------------------------------
 
-// Возвращаем аутентификацию на место
 app.UseAuthentication();
 app.UseAuthorization();
 

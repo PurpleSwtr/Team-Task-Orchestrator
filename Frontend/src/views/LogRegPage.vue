@@ -49,10 +49,7 @@ const tryLogin = async () => {
       email: email.value,
       password: password.value
     });
-    
-    
-    // Здесь можно добавить логику перенаправления после успешного входа
-    
+    console.log(response)
   } catch (error) {
     // Обрабатываем различные типы ошибок
     console.error('Ошибка при входе:', error);
