@@ -1,0 +1,75 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Docker in Background",
+      "type": "shell",
+      "command": "docker-compose up -d",
+      "presentation": {
+        "group": "group1",
+        "panel": "dedicated",
+        "name": "Docker"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run NPM Dev",
+      "type": "shell",
+      "command": "cd Frontend && npm run dev",
+      "isBackground": true,
+      "presentation": {
+        "group": "group2",
+        "panel": "dedicated",
+        "name": "NPM"
+      },
+      // *** УМНОЕ ОЖИДАНИЕ ВМЕСТО ПАУЗЫ ***
+      // Этот блок ищет в выводе консоли строку о готовности Vite
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": {
+          // Регулярное выражение, которое ищет строку, содержащую "VITE" и "ready"
+          "regexp": ".*(VITE).*ready.*",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          // Когда VSCode увидит строку, подходящую под regexp, он посчитает задачу "готовой"
+          "beginsPattern": ".*VITE.*",
+          "endsPattern": ".*VITE.*ready.*"
+        }
+      }
+    },
+    {
+      "label": "Open Browser",
+      "type": "shell",
+      // *** ЗАДЕРЖКА БОЛЬШЕ НЕ НУЖНА ***
+      // Команды запускаются сразу, без sleep или timeout
+      // Для Windows:
+      "command": "start chrome 'http://localhost:8080/swagger/index.html' && start chrome 'http://localhost:5173/'",
+
+      // Для macOS:
+      // "command": "open -a 'Google Chrome' 'http://localhost:8080/swagger/index.html' && open -a 'Google Chrome' 'http://localhost:5173/login'",
+      
+      // Для Linux:
+      // "command": "google-chrome 'http://localhost:8080/swagger/index.html' 'http://localhost:5173/login'",
+      
+      "problemMatcher": []
+    },
+    {
+      "label": "Start Project and Open Browser",
+      "dependsOn": [
+        "Run Docker in Background",
+        "Run NPM Dev",
+        "Open Browser"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
