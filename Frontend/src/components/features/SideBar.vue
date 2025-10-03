@@ -35,6 +35,7 @@
   import { ref } from 'vue';
   import MenuButton from '../ui/MenuButton.vue';
   import type { MenuItem } from '@/types'
+import apiClient from '@/api';
   let items = ref([
     {message: "Войти", route_path: "/login_register", icon: "login"},
     {message: "Главная", route_path: "/", icon: "home"},
@@ -57,7 +58,12 @@
   function handleClick(clickedItem: MenuItem){
     if (clickedItem.message === 'Выйти') {
       console.log("Выходим!")
-      // Тут логика выхода из аккаунта
+      try {
+        apiClient.post('/Auth/logout');
+        window.location.href = '/';
+      } catch (error) {
+        console.error('Ошибка при выходе:', error);
+      } 
     }
   };
 

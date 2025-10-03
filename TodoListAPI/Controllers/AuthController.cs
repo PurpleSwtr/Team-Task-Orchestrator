@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-using TodoListAPI.Services; // <-- Используем наш сервис
-using TodoListAPI.Models.DTO; // <-- Не забудь добавить этот using!
+using TodoListAPI.Services;
+using TodoListAPI.Models.DTO;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.AspNetCore.Authorization;
 namespace TodoListAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -16,13 +18,13 @@ namespace TodoListAPI.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(string email, string password)
+        public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            var result = await _authService.RegisterUserAsync(email, password);
+            var result = await _authService.RegisterUserAsync(model.Email, model.Password);
 
             if (result.Succeeded)
             {
-                return Ok(new { Message = "User created successfully!" });
+                return Ok(new { Message = "Пользователь создан!" });
             }
 
             return BadRequest(result.Errors);
@@ -31,15 +33,32 @@ namespace TodoListAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            // Теперь мы берем email и password из модели
             var token = await _authService.LoginUserAsync(model.Email, model.Password);
 
             if (token != null)
             {
-                return Ok(new { Token = token });
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = !HttpContext.Request.Host.Host.Contains("localhost"), 
+                    SameSite = SameSiteMode.Strict, 
+                    Expires = DateTime.UtcNow.AddDays(2)
+                };
+
+                Response.Cookies.Append("jwtToken", token, cookieOptions);
+
+                return Ok(new { Message = "Успешный вход в систему" });
             }
 
-            return Unauthorized(new { Message = "Invalid credentials" });
+            return Unauthorized(new { Message = "Неверные учетные данные" });
+        }
+
+        [HttpPost("logout")]
+        [Authorize] 
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("jwtToken");
+            return Ok(new { Message = "Выход выполнен успешно" });
         }
     }
 }

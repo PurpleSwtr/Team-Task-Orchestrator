@@ -14,7 +14,12 @@
           class="bg-white p-2 mx-20 border-2 rounded-md border-gray-300 border-b-green-600 outline-blue-600"
           v-model="password"
         >
-        <AppButton @click="tryLogin" :statusLoading="buttonLoading" message="Зарегестрироваться"
+        <Transition name="fade" mode="out-in">
+          <p v-if="errorMessage" class="text-red-500 self-center" key="error-message">
+            {{ errorMessage }}
+          </p>
+        </Transition>
+        <AppButton @click="tryRegister" :statusLoading="buttonLoading" message="Зарегестрироваться"
         class="self-center mb-10"/>
         <div class="text-center">
             <p class="inline">У вас уже есть аккаунт? </p>
@@ -31,35 +36,56 @@
 </template>
 
 <script setup lang="ts">
-import axios from 'axios';
 import { ref } from 'vue';
 import AppButton from '@/components/ui/AppButton.vue';
+import apiClient from '@/api';
 
 const emit = defineEmits(['switchToLogin']);
 
 const buttonLoading = ref(false);
 const email = ref('');
 const password = ref('');
+const errorMessage = ref('')
+const tryRegister = async () => {
+    buttonLoading.value = true; 
+    errorMessage.value = '';
 
-const tryLogin = async () => {
     try {
-      buttonLoading.value = !buttonLoading.value
-      console.log('click');
-      const url = `http://localhost:8080/api/Auth/login`;
-      console.log(url, {
+      await apiClient.post('/Auth/register', {
         email: email.value,
         password: password.value
       });
-      // Правильно передаем данные в теле запроса
-      const response = await axios.post(url, {
+
+      await apiClient.post('/Auth/login', {
         email: email.value,
         password: password.value
       });
-      console.log(response)
-    } catch (error) {
-      // Обрабатываем различные типы ошибок
-      console.error('Ошибка при входе:', error);
       
+      window.location.href = '/'; 
+
+    } catch (error: any) {
+      if (error.response && error.response.data && Array.isArray(error.response.data)) {
+
+        errorMessage.value = error.response.data.map((e: any) => e.description).join(' ');
+      } else {
+        errorMessage.value = 'Ошибка при регистрации. Возможно, такой email уже занят.';
+      }
+      console.error('Ошибка при регистрации:', error);
+      buttonLoading.value = false; 
     }
+
   };
 </script>
+
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

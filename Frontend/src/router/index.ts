@@ -74,6 +74,11 @@ const router = createRouter({
           name: 'tasks',  
           component: TasksPage,
         },
+        {
+          path: 'logout', 
+          name: 'logout',  
+          component: MainLayout,
+        },
       ],
     },
   ],

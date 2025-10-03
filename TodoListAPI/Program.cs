@@ -5,6 +5,7 @@ using TodoListAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Task = System.Threading.Tasks.Task;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -26,6 +27,15 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            context.Token = context.Request.Cookies["jwtToken"];
+            return Task.CompletedTask;
+        }
+    };
+
     options.SaveToken = true;
     options.RequireHttpsMetadata = false;
     options.TokenValidationParameters = new TokenValidationParameters()
@@ -38,15 +48,15 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// --- 1. ДОБАВЛЯЕМ СЕРВИС CORS ---
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowVueApp",
+    options.AddPolicy("VueApp",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173") // URL вашего фронтенда
+            policy.WithOrigins("http://localhost:5173")
                   .AllowAnyHeader()
-                  .AllowAnyMethod();
+                  .AllowAnyMethod()
+                  .AllowCredentials(); 
         });
 });
 // ------------------------------------
@@ -79,9 +89,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// --- 2. ВКЛЮЧАЕМ MIDDLEWARE ДЛЯ CORS ---
-// Важно: UseCors() должен быть вызван ДО UseAuthentication() и UseAuthorization()
-app.UseCors("AllowVueApp");
+
+app.UseCors("VueApp");
 // ----------------------------------------
 
 app.UseAuthentication();

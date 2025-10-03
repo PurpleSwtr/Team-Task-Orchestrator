@@ -1,6 +1,6 @@
 namespace TodoListAPI.Models.DTO
 {
-    public class LoginModel
+    public class RegisterModel
     {
         public required string Email { get; set; }
         public required string Password { get; set; }
