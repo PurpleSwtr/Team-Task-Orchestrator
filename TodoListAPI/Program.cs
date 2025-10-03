@@ -59,7 +59,6 @@ builder.Services.AddCors(options =>
                   .AllowCredentials(); 
         });
 });
-// ------------------------------------
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddControllers();
