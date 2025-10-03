@@ -13,10 +13,26 @@
 </template>
 
 <script setup lang="ts">
+import apiClient from '@/api';
 import AppButton from '@/components/ui/AppButton.vue';
-import {ref} from 'vue'
+import {onMounted, ref} from 'vue'
 let selected = ref('')
-const tables = ref(['Задачи', 'Пользователи', 'Команды', 'Роли'])
+const tables = ref<string[]>([])
+
+const getTables = async () => {
+    
+    try {
+    tables.value = (await apiClient.get('/Generator')).data
+    console.log(tables.value)
+    }   
+    catch {
+
+    }
+
+};
+
+onMounted(getTables);
+
 function GenStart() {
 // Будем отправлять в апишку данные наших плейсхолдеорв
 };

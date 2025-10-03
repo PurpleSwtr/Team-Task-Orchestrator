@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore; 
 using System.Linq;                 
@@ -6,6 +7,7 @@ using TodoListAPI.Models;
 namespace TodoListAPI.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class GeneratorController : ControllerBase
     {

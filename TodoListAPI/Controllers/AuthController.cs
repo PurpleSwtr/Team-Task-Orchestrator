@@ -40,7 +40,7 @@ namespace TodoListAPI.Controllers
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = !HttpContext.Request.Host.Host.Contains("localhost"), 
+                    Secure = true, 
                     SameSite = SameSiteMode.Strict, 
                     Expires = DateTime.UtcNow.AddDays(2)
                 };
