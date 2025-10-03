@@ -20,7 +20,9 @@ import SettingsIcon from '../icons/SettingsIcon.vue';
 
 import AboutIcon from '@/components/icons/AboutIcon.vue';
 import GeneratorIcon from '../icons/GeneratorIcon.vue';
+import StaticticsIcon from '../icons/StaticticsIcon.vue';
 
+import MenuTaskIcon from '../icons/MenuTaskIcon.vue';
 import ProjectsIcon from '../icons/ProjectsIcon.vue';
 import TeamsIcon from '../icons/TeamsIcon.vue';
 import UsersIcon from '../icons/UsersIcon.vue';
@@ -37,6 +39,8 @@ const iconMap: { [key: string]: Component } = {
   projects: ProjectsIcon,
   teams: TeamsIcon,
   users: UsersIcon,
+  statistics: StaticticsIcon,
+  tasks: MenuTaskIcon
 
 };
 

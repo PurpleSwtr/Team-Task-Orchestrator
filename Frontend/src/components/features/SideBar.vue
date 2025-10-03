@@ -38,12 +38,13 @@
   let items = ref([
     {message: "Войти", route_path: "/login", icon: "login"},
     {message: "Главная", route_path: "/", icon: "home"},
-    {message: "Проекты", route_path: "/projects", icon: "projects"},
-    {message: "Команды", route_path: "/teams", icon: "teams"},
+    {message: "Мои задачи", route_path: "/tasks", icon: "tasks"},
     {message: "Пользователи", route_path: "/users", icon: "users"},
+    {message: "Команды", route_path: "/teams", icon: "teams"},
+    {message: "Проекты", route_path: "/projects", icon: "projects"},
     {message: "Генератор", route_path: "/generator", icon: "generator"},
+    {message: "Статистика", route_path: "/statistics", icon: "statistics"},
     {message: "О проекте", route_path: "/about", icon: "about"},
-
 
   ]);
 
