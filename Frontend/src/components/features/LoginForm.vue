@@ -14,16 +14,51 @@
           class="bg-white p-2 mx-20 border-2 rounded-md border-gray-300 border-b-green-600 outline-blue-600"
           v-model="password"
         >
-        <AppButton @click="tryLogin":statusLoading="buttonLoading" message="Войти" class="mx-40 mb-10"></AppButton>
+        <AppButton @click="tryLogin" :statusLoading="buttonLoading" message="Войти" class="self-center mb-10"/>
         <div class="text-center">
-        <p class="inline">У вас нет аккаунта? </p>
-        <RouterLink 
-        to="/register">
-        <button class="inline text-blue-500 cursor-pointer underline-offset-2 hover:underline hover:text-blue-700">Зарегистрироваться</button>
-        
-        </RouterLink>
-      </div>
+            <p class="inline">У вас нет аккаунта? </p>
+            <button 
+                @click="$emit('switchToRegister')"
+                class="inline text-blue-500 cursor-pointer underline-offset-2 hover:underline hover:text-blue-700"
+            >
+                Зарегистрироваться
+            </button>
+        </div>
         <div class="pb-15"></div>
       </div>
     </div>
 </template>
+
+<script setup lang="ts">
+import axios from 'axios';
+import { ref } from 'vue';
+import AppButton from '@/components/ui/AppButton.vue';
+
+const emit = defineEmits(['switchToRegister']);
+
+const buttonLoading = ref(false);
+const email = ref('');
+const password = ref('');
+
+const tryLogin = async () => {
+    try {
+      buttonLoading.value = !buttonLoading.value
+      console.log('click');
+      const url = `http://localhost:8080/api/Auth/login`;
+      console.log(url, {
+        email: email.value,
+        password: password.value
+      });
+      // Правильно передаем данные в теле запроса
+      const response = await axios.post(url, {
+        email: email.value,
+        password: password.value
+      });
+      console.log(response)
+    } catch (error) {
+      // Обрабатываем различные типы ошибок
+      console.error('Ошибка при входе:', error);
+      
+    }
+  };
+</script>

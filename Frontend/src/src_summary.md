@@ -54,6 +54,15 @@ app.mount('#app')
 ### 📄 `assets/main.css`
 
 ```css
+/* 
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+@theme {
+  fontFamily: {
+    sans: ['Montserrat', ...theme('fontFamily.sans')],
+  }
+} */
+
 @import './base.css';
 @import 'tailwindcss';
 ```
@@ -92,7 +101,70 @@ const props = defineProps({
 ### 📄 `components/features/LoginForm.vue`
 
 ```vue
+<template>
+    <div class="flex flex-col items-center w-full max-w-md bg-gray-100 pt-30 rounded-3xl shadow-2xl shadow-gray-300">
+      <h1 class="text-3xl font-bold mb-6 text-gray-700">Вход в аккаунт</h1>
+      <div class="flex flex-col gap-4 w-full">
+        <input 
+          type="email" 
+          placeholder="Email" 
+          class="bg-white p-2 mx-20 border-2 rounded-md border-gray-300 border-b-green-600 outline-blue-600"
+          v-model="email"
+        >
+        <input 
+          type="password" 
+          placeholder="Пароль" 
+          class="bg-white p-2 mx-20 border-2 rounded-md border-gray-300 border-b-green-600 outline-blue-600"
+          v-model="password"
+        >
+        <AppButton @click="tryLogin" :statusLoading="buttonLoading" message="Войти" class="mx-40 mb-10"></AppButton>
+        <div class="text-center">
+            <p class="inline">У вас нет аккаунта? </p>
+            <button 
+                @click="$emit('switchToRegister')"
+                class="inline text-blue-500 cursor-pointer underline-offset-2 hover:underline hover:text-blue-700"
+            >
+                Зарегистрироваться
+            </button>
+        </div>
+        <div class="pb-15"></div>
+      </div>
+    </div>
+</template>
 
+<script setup lang="ts">
+import axios from 'axios';
+import { ref } from 'vue';
+import AppButton from '@/components/ui/AppButton.vue';
+
+const emit = defineEmits(['switchToRegister']);
+
+const buttonLoading = ref(false);
+const email = ref('');
+const password = ref('');
+
+const tryLogin = async () => {
+    try {
+      buttonLoading.value = !buttonLoading.value
+      console.log('click');
+      const url = `http://localhost:8080/api/Auth/login`;
+      console.log(url, {
+        email: email.value,
+        password: password.value
+      });
+      // Правильно передаем данные в теле запроса
+      const response = await axios.post(url, {
+        email: email.value,
+        password: password.value
+      });
+      console.log(response)
+    } catch (error) {
+      // Обрабатываем различные типы ошибок
+      console.error('Ошибка при входе:', error);
+      
+    }
+  };
+</script>
 ```
 
 ---
@@ -100,7 +172,71 @@ const props = defineProps({
 ### 📄 `components/features/RegisterForm.vue`
 
 ```vue
+<template>
+    <div class="flex flex-col items-center w-full max-w-md bg-gray-100 pt-30 rounded-3xl shadow-2xl shadow-gray-300">
+      <h1 class="text-3xl font-bold mb-6 text-gray-700">Регистрация</h1>
+      <div class="flex flex-col gap-4 w-full">
+        <input 
+          type="email" 
+          placeholder="Email" 
+          class="bg-white p-2 mx-20 border-2 rounded-md border-gray-300 border-b-green-600 outline-blue-600"
+          v-model="email"
+        >
+        <input 
+          type="password" 
+          placeholder="Пароль" 
+          class="bg-white p-2 mx-20 border-2 rounded-md border-gray-300 border-b-green-600 outline-blue-600"
+          v-model="password"
+        >
+        <AppButton @click="tryLogin" :statusLoading="buttonLoading" message="Зарегестрироваться"
+        </AppButton>
+        <div class="text-center">
+            <p class="inline">У вас уже есть аккаунт? </p>
+            <button 
+                @click="$emit('switchToLogin')"
+                class="inline text-blue-500 cursor-pointer underline-offset-2 hover:underline hover:text-blue-700"
+            >
+                Войти
+            </button>
+        </div>
+        <div class="pb-15"></div>
+      </div>
+    </div>
+</template>
 
+<script setup lang="ts">
+import axios from 'axios';
+import { ref } from 'vue';
+import AppButton from '@/components/ui/AppButton.vue';
+
+const emit = defineEmits(['switchToLogin']);
+
+const buttonLoading = ref(false);
+const email = ref('');
+const password = ref('');
+
+const tryLogin = async () => {
+    try {
+      buttonLoading.value = !buttonLoading.value
+      console.log('click');
+      const url = `http://localhost:8080/api/Auth/login`;
+      console.log(url, {
+        email: email.value,
+        password: password.value
+      });
+      // Правильно передаем данные в теле запроса
+      const response = await axios.post(url, {
+        email: email.value,
+        password: password.value
+      });
+      console.log(response)
+    } catch (error) {
+      // Обрабатываем различные типы ошибок
+      console.error('Ошибка при входе:', error);
+      
+    }
+  };
+</script>
 ```
 
 ---
@@ -146,13 +282,14 @@ const props = defineProps({
   import MenuButton from '../ui/MenuButton.vue';
   import type { MenuItem } from '@/types'
   let items = ref([
-    {message: "Войти", route_path: "/login", icon: "login"},
+    {message: "Войти", route_path: "/login_register", icon: "login"},
     {message: "Главная", route_path: "/", icon: "home"},
-    {message: "Проекты", route_path: "/projects", icon: "projects"},
-    {message: "Команды", route_path: "/teams", icon: "teams"},
+    {message: "Мои задачи", route_path: "/tasks", icon: "tasks"},
     {message: "Пользователи", route_path: "/users", icon: "users"},
+    {message: "Команды", route_path: "/teams", icon: "teams"},
+    {message: "Проекты", route_path: "/projects", icon: "projects"},
     {message: "Генератор", route_path: "/generator", icon: "generator"},
-    {message: "Статистика", route_path: "/satistics", icon: "satistics"},
+    {message: "Статистика", route_path: "/statistics", icon: "statistics"},
     {message: "О проекте", route_path: "/about", icon: "about"},
 
   ]);
@@ -251,17 +388,28 @@ const props = defineProps({
 
 ---
 
+### 📄 `components/icons/MenuTaskIcon.vue`
+
+```vue
+<template>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="9 11 12 14 22 4"></polyline>
+    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+  </svg>
+</template>
+```
+
+---
+
 ### 📄 `components/icons/ProjectsIcon.vue`
 
 ```vue
 <template>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-  <polyline points="14 2 14 8 20 8"></polyline>
-  <line x1="16" y1="13" x2="8" y2="13"></line>
-  <line x1="16" y1="17" x2="8" y2="17"></line>
-  <polyline points="10 9 9 9 8 9"></polyline>
-</svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+    <polyline points="2 12 12 17 22 12"></polyline>
+    <polyline points="2 17 12 22 22 17"></polyline>
+  </svg>
 </template>
 ```
 
@@ -281,7 +429,7 @@ const props = defineProps({
 
 ```vue
 <template>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M24 3.875l-6 1.221 1.716 1.708-5.351 5.358-3.001-3.002-7.336 7.242 1.41 1.418 5.922-5.834 2.991 2.993 6.781-6.762 1.667 1.66 1.201-6.002zm0 17.125v2h-24v-22h2v20h22z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><path d="M24 3.875l-6 1.221 1.716 1.708-5.351 5.358-3.001-3.002-7.336 7.242 1.41 1.418 5.922-5.834 2.991 2.993 6.781-6.762 1.667 1.66 1.201-6.002zm0 17.125v2h-24v-22h2v20h22z"/></svg>
 </template>
 ```
 
@@ -306,10 +454,7 @@ const props = defineProps({
 
 ```vue
 <template>
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M17 10H19C20.1046 10 21 9.10457 21 8V6C21 4.89543 20.1046 4 19 4H17C15.8954 4 15 4.89543 15 6V8C15 9.10457 15.8954 10 17 10ZM5 10H7C8.10457 10 9 9.10457 9 8V6C9 4.89543 8.10457 4 7 4H5C3.89543 4 3 4.89543 3 6V8C3 9.10457 3.89543 10 5 10ZM11 20H13C14.1046 20 15 19.1046 15 18V16C15 14.8954 14.1046 14 13 14H11C9.89543 14 9 14.8954 9 16V18C9 19.1046 9.89543 20 11 20ZM7 10V14H9M17 10V14H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-
+    <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0.5" stroke-linecap="round"><path d="M22 21c.53 0 1.039.211 1.414.586.376.375.586.884.586 1.414v1h-6v-1c0-1.104.896-2 2-2h2zm-7 0c.53 0 1.039.211 1.414.586.376.375.586.884.586 1.414v1h-6v-1c0-1.104.896-2 2-2h2zm7 1h-2c-.551 0-1 .448-1 1h4c0-.564-.461-1-1-1zm-7 0h-2c-.551 0-1 .448-1 1h4c0-.564-.461-1-1-1zm-6.758-1.216c-.025.679-.576 1.21-1.256 1.21-.64 0-1.179-.497-1.254-1.156l-.406-4.034-.317 4.019c-.051.656-.604 1.171-1.257 1.171-.681 0-1.235-.531-1.262-1.21l-.262-6.456-.308.555c-.241.437-.8.638-1.265.459-.404-.156-.655-.538-.655-.951 0-.093.012-.188.039-.283l1.134-4.098c.17-.601.725-1.021 1.351-1.021h4.096c.511 0 1.012-.178 1.285-.33.723-.403 2.439-1.369 3.136-1.793.394-.243.949-.147 1.24.217.32.396.286.95-.074 1.297l-3.048 2.906c-.375.359-.595.849-.617 1.381-.061 1.397-.3 8.117-.3 8.117zm-5.718-10.795c-.18 0-.34.121-.389.294-.295 1.04-1.011 3.666-1.134 4.098l1.511-2.593c.172-.295.623-.18.636.158l.341 8.797c.01.278.5.287.523.002 0 0 .269-3.35.308-3.944.041-.599.449-1.017.992-1.017.547.002.968.415 1.029 1.004.036.349.327 3.419.385 3.938.043.378.505.326.517.022 0 0 .239-6.725.3-8.124.033-.791.362-1.523.925-2.061l3.045-2.904c-.661.492-2.393 1.468-3.121 1.873-.396.221-1.07.457-1.772.457h-4.096zm18.476 6.011c-1.305 0-2.364 1.06-2.364 2.364 0 1.305 1.059 2.365 2.364 2.365s2.364-1.06 2.364-2.365c0-1.304-1.059-2.364-2.364-2.364zm-7 0c-1.305 0-2.364 1.06-2.364 2.364 0 1.305 1.059 2.365 2.364 2.365s2.364-1.06 2.364-2.365c0-1.304-1.059-2.364-2.364-2.364zm7 1c.752 0 1.364.612 1.364 1.364 0 .753-.612 1.365-1.364 1.365-.752 0-1.364-.612-1.364-1.365 0-.752.612-1.364 1.364-1.364zm-7 0c.752 0 1.364.612 1.364 1.364 0 .753-.612 1.365-1.364 1.365-.752 0-1.364-.612-1.364-1.365 0-.752.612-1.364 1.364-1.364zm10-2h-14.658v-1h7.658v-1h3v1h3v-13h-22v7l-1 3v-11h24v15zm-6-6h-4v-1h4v1zm-12.727-5c-1.278 0-2.315 1.038-2.315 2.316 0 1.278 1.037 2.316 2.315 2.316s2.316-1.038 2.316-2.316c0-1.278-1.038-2.316-2.316-2.316zm0 1c.726 0 1.316.59 1.316 1.316 0 .726-.59 1.316-1.316 1.316-.725 0-1.315-.59-1.315-1.316 0-.726.59-1.316 1.315-1.316zm15.727 2h-7v-1h7v1zm0-2h-7v-1h7v1z"/></svg>
 </template>
 ```
 
@@ -453,6 +598,7 @@ import AboutIcon from '@/components/icons/AboutIcon.vue';
 import GeneratorIcon from '../icons/GeneratorIcon.vue';
 import StaticticsIcon from '../icons/StaticticsIcon.vue';
 
+import MenuTaskIcon from '../icons/MenuTaskIcon.vue';
 import ProjectsIcon from '../icons/ProjectsIcon.vue';
 import TeamsIcon from '../icons/TeamsIcon.vue';
 import UsersIcon from '../icons/UsersIcon.vue';
@@ -470,6 +616,7 @@ const iconMap: { [key: string]: Component } = {
   teams: TeamsIcon,
   users: UsersIcon,
   statistics: StaticticsIcon,
+  tasks: MenuTaskIcon
 
 };
 
@@ -528,15 +675,17 @@ import HomePage from '../views/HomePage.vue'
 import AboutPage from '../views/AboutPage.vue'
 import SettingsPage from '@/views/SettingsPage.vue'
 
-import LoginPage from '@/views/auth/LoginPage.vue'
-import RegisterPage from '@/views/auth/RegisterPage.vue'
+// import LoginPage from '@/views/auth/LoginPage.vue'
+// import RegisterPage from '@/views/auth/RegisterPage.vue'
 
 import GeneratorPage from '../views/GeneratorPage.vue'
 import StatisticsPage from '@/views/StatisticsPage.vue'
 
+import TasksPage from '@/views/TasksPage.vue'
 import TeamsPage from '@/views/TeamsPage.vue'
 import ProjectsPage from '@/views/ProjectsPage.vue'
 import UsersPage from '@/views/UsersPage.vue'
+import LoginRegisterPage from '@/views/auth/LoginRegisterPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -556,15 +705,11 @@ const router = createRouter({
           component: AboutPage,
         },
         {
-          path: 'login', 
-          name: 'login',  
-          component: LoginPage,
+          path: 'login_register', 
+          name: 'login_register',  
+          component: LoginRegisterPage,
         },
-        {
-          path: 'register', 
-          name: 'register',  
-          component: RegisterPage,
-        },
+
         {
           path: 'generator', 
           name: 'generator',  
@@ -594,6 +739,11 @@ const router = createRouter({
           path: 'statistics', 
           name: 'statistics',  
           component: StatisticsPage,
+        },
+        {
+          path: 'tasks', 
+          name: 'tasks',  
+          component: TasksPage,
         },
       ],
     },
@@ -759,6 +909,16 @@ function addTask(event: Event) {
 
 ---
 
+### 📄 `views/TasksPage.vue`
+
+```vue
+<template>
+    
+</template>
+```
+
+---
+
 ### 📄 `views/TeamsPage.vue`
 
 ```vue
@@ -795,151 +955,46 @@ function addTask(event: Event) {
 
 ---
 
-### 📄 `views/auth/LoginPage.vue`
+### 📄 `views/auth/LoginRegisterPage.vue`
 
 ```vue
+// views/auth/LoginRegisterPage.vue
+
 <template>
   <div class="min-h-screen flex items-center justify-center pb-50">
-    <div class="flex flex-col items-center w-full max-w-md bg-gray-100 pt-30 rounded-3xl shadow-2xl shadow-gray-300">
-      <h1 class="text-3xl font-bold mb-6 text-gray-700">Вход в аккаунт</h1>
-      <div class="flex flex-col gap-4 w-full">
-        <input 
-          type="email" 
-          placeholder="Email" 
-          class="bg-white p-2 mx-20 border-2 rounded-md border-gray-300 border-b-green-600 outline-blue-600"
-          v-model="email"
-        >
-        <input 
-          type="password" 
-          placeholder="Пароль" 
-          class="bg-white p-2 mx-20 border-2 rounded-md border-gray-300 border-b-green-600 outline-blue-600"
-          v-model="password"
-        >
-        <AppButton @click="tryLogin":statusLoading="buttonLoading" message="Войти" class="mx-40 mb-10"></AppButton>
-        <div class="text-center">
-        <p class="inline">У вас нет аккаунта? </p>
-        <RouterLink 
-        to="/register">
-        <button class="inline text-blue-500 cursor-pointer underline-offset-2 hover:underline hover:text-blue-700">Зарегистрироваться</button>
-        
-        </RouterLink>
-      </div>
-        <div class="pb-15"></div>
-      </div>
-    </div>
+    <Transition name="fade" mode="out-in">
+      <component 
+        :is="activeComponent" 
+        @switch-to-register="activeComponentName = 'RegisterForm'"
+        @switch-to-login="activeComponentName = 'LoginForm'"
+      />
+    </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
-  import {ref} from 'vue'
-  import { RouterLink } from 'vue-router';
-  import AppButton from '@/components/ui/AppButton.vue';
-  import axios from 'axios';
+import { ref, computed, shallowRef } from 'vue';
+import LoginForm from '@/components/features/LoginForm.vue';
+import RegisterForm from '@/components/features/RegisterForm.vue';
 
-  const password = ref('')
-  const email = ref('')
-  const buttonLoading = ref(false)
-
-  const tryLogin = async () => {
-    try {
-      buttonLoading.value = !buttonLoading.value
-      console.log('click');
-      const url = `http://localhost:8080/api/Auth/login`;
-      console.log(url, {
-        email: email.value,
-        password: password.value
-      });
-      // Правильно передаем данные в теле запроса
-      const response = await axios.post(url, {
-        email: email.value,
-        password: password.value
-      });
-      console.log(response)
-    } catch (error) {
-      // Обрабатываем различные типы ошибок
-      console.error('Ошибка при входе:', error);
-      
-    }
-  };
-    
-</script>
-
-<style>
-
-</style>
-```
-
----
-
-### 📄 `views/auth/RegisterPage.vue`
-
-```vue
-<template>
-  <div class="min-h-screen flex items-center justify-center pb-50">
-    <div class="flex flex-col items-center w-full max-w-md bg-gray-100 pt-30 rounded-3xl shadow-2xl shadow-gray-300">
-      <h1 class="text-3xl font-bold mb-6 text-gray-700">Регистрация аккаунта</h1>
-      <div class="flex flex-col gap-4 w-full">
-        <input 
-          type="email" 
-          placeholder="Email" 
-          class="bg-white p-2 mx-20 border-2 rounded-md border-gray-300 border-b-green-600 outline-blue-600"
-          v-model="email"
-        >
-        <input 
-          type="password" 
-          placeholder="Пароль" 
-          class="bg-white p-2 mx-20 border-2 rounded-md border-gray-300 border-b-green-600 outline-blue-600"
-          v-model="password"
-        >
-        <AppButton @click="tryLogin" :status-loading="buttonLoading" message="Войти" class="mx-40 mb-10"></AppButton>
-        <div class="text-center">
-        <p class="inline">У вас уже есть аккаунт? </p>
-        <RouterLink 
-        to="/login">
-        <button class="inline text-blue-500 cursor-pointer underline-offset-2 hover:underline hover:text-blue-700">Войти</button>
-        </RouterLink>
-        
-      </div>
-        <div class="pb-15"></div>
-      </div>
-    </div>
-  </div>
-</template>
-
-<script setup lang="ts">
-import {ref} from 'vue'
-import { RouterLink } from 'vue-router';
-import AppButton from '@/components/ui/AppButton.vue';
-import axios from 'axios';
-const buttonLoading = ref(false)
-const password = ref('')
-const email = ref('')
-
-const tryLogin = async () => {
-  try {
-    buttonLoading.value = !buttonLoading.value
-    console.log('click');
-    const url = `http://localhost:8080/api/Auth/login`;
-    console.log(url, {
-      email: email.value,
-      password: password.value
-    });
-    // Правильно передаем данные в теле запроса
-    const response = await axios.post(url, {
-      email: email.value,
-      password: password.value
-    });
-    console.log(response)
-  } catch (error) {
-    // Обрабатываем различные типы ошибок
-    console.error('Ошибка при входе:', error);
-    
-  }
+const components = {
+  LoginForm,
+  RegisterForm
 };
-  
+
+const activeComponentName = ref<'LoginForm' | 'RegisterForm'>('LoginForm');
+
+const activeComponent = computed(() => components[activeComponentName.value]);
 </script>
 
-<style>
-
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 </style>
 ```

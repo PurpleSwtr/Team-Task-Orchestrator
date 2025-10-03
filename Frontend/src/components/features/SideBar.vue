@@ -36,7 +36,7 @@
   import MenuButton from '../ui/MenuButton.vue';
   import type { MenuItem } from '@/types'
   let items = ref([
-    {message: "Войти", route_path: "/login", icon: "login"},
+    {message: "Войти", route_path: "/login_register", icon: "login"},
     {message: "Главная", route_path: "/", icon: "home"},
     {message: "Мои задачи", route_path: "/tasks", icon: "tasks"},
     {message: "Пользователи", route_path: "/users", icon: "users"},
