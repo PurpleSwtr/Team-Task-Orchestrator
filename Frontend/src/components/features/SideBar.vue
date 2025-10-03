@@ -1,6 +1,6 @@
 <template>
   <aside class="w-64 h-screen bg-gray-800 text-cyan-50 flex flex-col p-5">
-    <div class="text-2xl font-bold mb-10">
+    <div class="text-2xl font-bold mb-10 text-yellow-500">
       Курсач24
     </div>
     
@@ -36,10 +36,15 @@
   import MenuButton from '../ui/MenuButton.vue';
   import type { MenuItem } from '@/types'
   let items = ref([
-    {message: "Главная", route_path: "/", icon: "home"},
     {message: "Войти", route_path: "/login", icon: "login"},
+    {message: "Главная", route_path: "/", icon: "home"},
+    {message: "Проекты", route_path: "/projects", icon: "projects"},
+    {message: "Команды", route_path: "/teams", icon: "teams"},
+    {message: "Пользователи", route_path: "/users", icon: "users"},
     {message: "Генератор", route_path: "/generator", icon: "generator"},
     {message: "О проекте", route_path: "/about", icon: "about"},
+
+
   ]);
 
   let bottom_items = ref([

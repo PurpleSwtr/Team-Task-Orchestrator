@@ -9,6 +9,9 @@ import RegisterPage from '@/views/RegisterPage.vue'
 import GeneratorPage from '../views/GeneratorPage.vue'
 import SettingsPage from '@/views/SettingsPage.vue'
 
+import TeamsPage from '@/views/TeamsPage.vue'
+import ProjectsPage from '@/views/ProjectsPage.vue'
+import UsersPage from '@/views/UsersPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -46,6 +49,21 @@ const router = createRouter({
           path: 'settings', 
           name: 'settings',  
           component: SettingsPage,
+        },
+        {
+          path: 'projects', 
+          name: 'projects',  
+          component: ProjectsPage,
+        },
+        {
+          path: 'teams', 
+          name: 'teams',  
+          component: TeamsPage,
+        },
+        {
+          path: 'users', 
+          name: 'users',  
+          component: UsersPage,
         },
       ],
     },

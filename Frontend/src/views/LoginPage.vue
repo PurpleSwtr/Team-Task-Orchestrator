@@ -18,7 +18,11 @@
         <AppButton @click="tryLogin":statusLoading="buttonLoading" message="Войти" class="mx-40 mb-10"></AppButton>
         <div class="text-center">
         <p class="inline">У вас нет аккаунта? </p>
+        <RouterLink 
+        to="/register">
         <button class="inline text-blue-500 cursor-pointer underline-offset-2 hover:underline hover:text-blue-700">Зарегистрироваться</button>
+        
+        </RouterLink>
       </div>
         <div class="pb-15"></div>
       </div>
@@ -28,7 +32,7 @@
 
 <script setup lang="ts">
   import {ref} from 'vue'
-
+  import { RouterLink } from 'vue-router';
   import AppButton from '@/components/ui/AppButton.vue';
   import axios from 'axios';
 
