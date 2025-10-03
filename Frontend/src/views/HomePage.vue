@@ -16,11 +16,8 @@ import { ref } from 'vue'
 import CardTask from '@/components/CardTask.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 
-interface Task {
-  id: number;
-  tittle: string;
-  text_task: string;
-}
+import type { Task } from '@/types'
+
 
 const tasks = ref<Task[]>([])
 const buttonLoading = ref(false)

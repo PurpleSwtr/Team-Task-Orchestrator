@@ -22,7 +22,8 @@
 </template>
 
 <script setup lang="ts">
-import LoadingCircle from './LoadingCircle.vue';
+    import LoadingCircle from './LoadingCircle.vue';
+    import { ref } from 'vue';
 
     const props = defineProps<{
         message: string

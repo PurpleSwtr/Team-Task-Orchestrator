@@ -2,8 +2,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 import MainLayout from '../layouts/MainLayout.vue'
 import HomePage from '../views/HomePage.vue'
 import AboutPage from '../views/AboutPage.vue'
-import LogRegPage from '../views/LogRegPage.vue'
+
+import LoginPage from '@/views/LoginPage.vue'
+import RegisterPage from '@/views/RegisterPage.vue'
+
 import GeneratorPage from '../views/GeneratorPage.vue'
+import SettingsPage from '@/views/SettingsPage.vue'
 
 
 const router = createRouter({
@@ -26,12 +30,22 @@ const router = createRouter({
         {
           path: 'login', 
           name: 'login',  
-          component: LogRegPage,
+          component: LoginPage,
+        },
+        {
+          path: 'register', 
+          name: 'register',  
+          component: RegisterPage,
         },
         {
           path: 'generator', 
           name: 'generator',  
           component: GeneratorPage,
+        },
+        {
+          path: 'settings', 
+          name: 'settings',  
+          component: SettingsPage,
         },
       ],
     },

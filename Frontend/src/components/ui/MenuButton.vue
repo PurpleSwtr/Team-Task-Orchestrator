@@ -16,12 +16,15 @@ import HomeIcon from '@/components/icons/HomeIcon.vue';
 import LoginIcon from '@/components/icons/LoginIcon.vue';
 import AboutIcon from '@/components/icons/AboutIcon.vue';
 import GeneratorIcon from '../icons/GeneratorIcon.vue';
-
+import SettingsIcon from '../icons/SettingsIcon.vue';
+import LogoutIcon from '@/components/icons/LogoutIcon.vue';
 const iconMap: { [key: string]: Component } = {
   home: HomeIcon,
   login: LoginIcon,
   about: AboutIcon,
-  generator: GeneratorIcon
+  generator: GeneratorIcon,
+  settings: SettingsIcon,
+  logout: LogoutIcon
 };
 
 const props = defineProps<{
