@@ -35,10 +35,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, inject } from 'vue';
+import { useRouter } from 'vue-router';
 import AppButton from '@/components/ui/AppButton.vue';
 import apiClient from '@/api';
+
 const emit = defineEmits(['switchToRegister']);
+const router = useRouter();
+const auth = inject('auth') as { setLoggedIn: () => void }; // Получаем доступ к функции из provide
 
 const buttonLoading = ref(false);
 const email = ref('');
@@ -54,7 +58,11 @@ const tryLogin = async () => {
         password: password.value
       });
 
-      window.location.href = '/';
+      if (auth) {
+        auth.setLoggedIn();
+      }
+      
+        await router.push('/');
 
     } catch (error) {
       errorMessage.value = 'Неверный email или пароль.';
@@ -66,13 +74,10 @@ const tryLogin = async () => {
 </script>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
+.fade-enter-active, .fade-leave-active {
   transition: opacity 0.3s ease;
 }
-
-.fade-enter-from,
-.fade-leave-to {
+.fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
 </style>

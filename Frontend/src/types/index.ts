@@ -1,7 +1,7 @@
 export interface MenuItem {
   message: string;
   icon: string;
-  route_path?: string; 
+  route_path: string; 
 }
 
 export interface Task {

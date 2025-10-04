@@ -6,38 +6,66 @@
     
     <nav class="flex flex-col flex-1">
       <ul class="flex-1">
-        <li v-for="item in items" :key="item.route_path" class="mb-4">
+        <li v-if="!auth?.isLoggedIn.value" class="mb-4">
           <MenuButton 
-            :message="item.message" 
-            :icon="item.icon" 
-            :route_path="item.route_path"
-          ></MenuButton>
+            message="Войти" 
+            icon="login" 
+            route_path="/login_register"
+          />
+        </li>
+        
+        <template v-if="auth?.isLoggedIn.value">
+            <li v-for="item in protectedItems" :key="item.route_path" class="mb-4">
+              <MenuButton 
+                :message="item.message" 
+                :icon="item.icon" 
+                :route_path="item.route_path"
+              />
+            </li>
+        </template>
+        
+        <li class="mb-4">
+            <MenuButton message="О проекте" route_path="/about" icon="about"/>
         </li>
       </ul>
-      <div class="border-t border-gray-500 my-4"></div>
-      <ul>
-        <li>
-          <MenuButton v-for="b_item in bottom_items" 
-            class="mb-4"
-            @click="handleClick(b_item)"
-            :key="b_item.route_path" 
-            :message="b_item.message" 
-            :icon="b_item.icon" 
-            :route_path="b_item.route_path"
-          ></MenuButton>
-        </li>
-      </ul>
+
+      <div v-if="auth?.isLoggedIn.value">
+        <div class="border-t border-gray-500 my-4"></div>
+        <ul>
+          <li>
+            <MenuButton 
+              message="Настройки" 
+              route_path="/settings" 
+              icon="settings"
+              class="mb-4"
+            />
+            <MenuButton 
+              message="Выйти" 
+              route_path="#" 
+              icon="logout"
+              @click.prevent="handleLogout"
+            />
+          </li>
+        </ul>
+      </div>
     </nav>
   </aside>
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue';
+  import { ref, inject, type Ref } from 'vue';
+  import { useRouter } from 'vue-router';
   import MenuButton from '../ui/MenuButton.vue';
-  import type { MenuItem } from '@/types'
-import apiClient from '@/api';
-  let items = ref([
-    {message: "Войти", route_path: "/login_register", icon: "login"},
+  import type { MenuItem } from '@/types';
+  import apiClient from '@/api';
+
+  const router = useRouter();
+  const auth = inject('auth') as { 
+    isLoggedIn: Ref<boolean>; 
+    setLoggedOut: () => void;
+  };
+  
+  const protectedItems = ref<MenuItem[]>([
     {message: "Главная", route_path: "/", icon: "home"},
     {message: "Мои задачи", route_path: "/tasks", icon: "tasks"},
     {message: "Пользователи", route_path: "/users", icon: "users"},
@@ -45,28 +73,20 @@ import apiClient from '@/api';
     {message: "Проекты", route_path: "/projects", icon: "projects"},
     {message: "Генератор", route_path: "/generator", icon: "generator"},
     {message: "Статистика", route_path: "/statistics", icon: "statistics"},
-    {message: "О проекте", route_path: "/about", icon: "about"},
-
   ]);
 
-  let bottom_items = ref([
-    {message: "Настройки", route_path: "/settings", icon: "settings"},
-    // Для выхода нужно внести отдельный путь на главную страничку которой пока нет
-    {message: "Выйти", route_path: "/", icon: "logout"},
-  ])
-
-  function handleClick(clickedItem: MenuItem){
-    if (clickedItem.message === 'Выйти') {
-      console.log("Выходим!")
-      try {
-        apiClient.post('/Auth/logout');
-        window.location.href = '/';
-      } catch (error) {
-        console.error('Ошибка при выходе:', error);
-      } 
+  const handleLogout = async () => {
+    try {
+      await apiClient.post('/Auth/logout');
+    } catch (error) {
+      console.error('Ошибка при выходе на сервере:', error);
+    } finally {
+      if (auth) {
+        auth.setLoggedOut();
+      }
+      await router.push('/login_register');
     }
   };
-
 </script>
 
 <style>

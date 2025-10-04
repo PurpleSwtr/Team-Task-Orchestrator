@@ -19,7 +19,7 @@
             {{ errorMessage }}
           </p>
         </Transition>
-        <AppButton @click="tryRegister" :statusLoading="buttonLoading" message="Зарегестрироваться"
+        <AppButton @click="tryRegister" :statusLoading="buttonLoading" message="Зарегистрироваться"
         class="self-center mb-10"/>
         <div class="text-center">
             <p class="inline">У вас уже есть аккаунт? </p>
@@ -36,16 +36,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, inject } from 'vue';
+import { useRouter } from 'vue-router';
 import AppButton from '@/components/ui/AppButton.vue';
 import apiClient from '@/api';
 
 const emit = defineEmits(['switchToLogin']);
+const router = useRouter();
+const auth = inject('auth') as { setLoggedIn: () => void };
 
 const buttonLoading = ref(false);
 const email = ref('');
 const password = ref('');
 const errorMessage = ref('')
+
 const tryRegister = async () => {
     buttonLoading.value = true; 
     errorMessage.value = '';
@@ -61,31 +65,31 @@ const tryRegister = async () => {
         password: password.value
       });
       
-      window.location.href = '/'; 
+      if (auth) {
+        auth.setLoggedIn();
+      }
+
+      await router.push('/'); 
 
     } catch (error: any) {
       if (error.response && error.response.data && Array.isArray(error.response.data)) {
-
         errorMessage.value = error.response.data.map((e: any) => e.description).join(' ');
       } else {
         errorMessage.value = 'Ошибка при регистрации. Возможно, такой email уже занят.';
       }
       console.error('Ошибка при регистрации:', error);
+    } finally {
       buttonLoading.value = false; 
     }
-
   };
 </script>
 
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
+.fade-enter-active, .fade-leave-active {
   transition: opacity 0.3s ease;
 }
-
-.fade-enter-from,
-.fade-leave-to {
+.fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
 </style>
