@@ -23,7 +23,6 @@ const getTables = async () => {
     
     try {
     tables.value = (await apiClient.get('/Generator')).data
-    console.log(tables.value)
     }   
     catch {
 

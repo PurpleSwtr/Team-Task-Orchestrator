@@ -4,6 +4,7 @@ using TodoListAPI.Services;
 using TodoListAPI.Models.DTO;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 namespace TodoListAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -40,8 +41,8 @@ namespace TodoListAPI.Controllers
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true, 
-                    SameSite = SameSiteMode.Strict, 
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddDays(2)
                 };
 
@@ -54,11 +55,25 @@ namespace TodoListAPI.Controllers
         }
 
         [HttpPost("logout")]
-        [Authorize] 
+        [Authorize]
         public IActionResult Logout()
         {
             Response.Cookies.Delete("jwtToken");
             return Ok(new { Message = "Выход выполнен успешно" });
+        }
+        [HttpGet("me")]
+        [Authorize]
+        public IActionResult GetCurrentUser()
+        {
+            var userEmail = User.FindFirstValue(ClaimTypes.Email);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // или Sub
+
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return Unauthorized();
+            }
+
+            return Ok(new { email = userEmail, id = userId });
         }
     }
 }

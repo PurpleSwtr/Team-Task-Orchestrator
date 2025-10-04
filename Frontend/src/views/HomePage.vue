@@ -18,9 +18,9 @@ import AppButton from '@/components/ui/AppButton.vue'
 
 import type { Task } from '@/types'
 
-
 const tasks = ref<Task[]>([])
 const buttonLoading = ref(false)
+
 function addTask(event: Event) {
   console.log("Задача добавлена!")
   tasks.value.push({
