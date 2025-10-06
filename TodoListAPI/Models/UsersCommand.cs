@@ -7,8 +7,8 @@ namespace TodoListAPI.Models;
 public partial class UsersCommand
 {
     public int IdConnection { get; set; }
-    public string IdUser { get; set; } // <--- ИЗМЕНИТЬ НА STRING
+    public string IdUser { get; set; } 
     public int IdTeam { get; set; }
     public virtual Team IdTeamNavigation { get; set; } = null!;
-    public virtual ApplicationUser IdUserNavigation { get; set; } = null!; // <--- ИЗМЕНИТЬ НА ApplicationUser
+    public virtual ApplicationUser IdUserNavigation { get; set; } = null!;
 }

@@ -7,7 +7,18 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Task = System.Threading.Tasks.Task;
 
+
+using TodoListAPI.Generators; // <-- ДОБАВЬ ЭТУ СТРОКУ В САМОМ ВЕРХУ ФАЙЛА
+
 var builder = WebApplication.CreateBuilder(args);
+
+Console.WriteLine("--- ЗАПУСК ТЕСТА ГЕНЕРАТОРА ---");
+
+var taskGenerator = new DataGeneratorTask();
+var new_task = taskGenerator.GetTask();
+Console.WriteLine(new_task);
+Console.WriteLine("--- ТЕСТ ГЕНЕРАТОРА ЗАВЕРШЕН ---");
+return;
 var configuration = builder.Configuration;
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

@@ -11,7 +11,6 @@
 # Learn about building .NET container images:
 # https://github.com/dotnet/dotnet-docker/blob/main/samples/README.md
 
-# Этап 1: Сборка приложения. Убедитесь, что он назван 'AS build'
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 
 COPY . /source
@@ -30,12 +29,9 @@ RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
     dotnet publish -a ${TARGETARCH/amd64/x64} --use-current-runtime --self-contained false -o /app
 
 ################################################################################
-# Этап 2: Создание финального образа для запуска.
-# Используем стандартный (не-alpine) образ, чтобы решить проблему с глобализацией.
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
-# Копируем скомпилированное приложение из этапа 'build'
 COPY --from=build /app .
 
 # Switch to a non-privileged user (defined in the base image) that the app will run under.
