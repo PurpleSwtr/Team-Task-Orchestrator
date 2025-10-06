@@ -15,7 +15,7 @@ services:
 
   db:
     build:
-      context: ./database-setup
+      context: ./Database
       dockerfile: Dockerfile
     environment:
       - ACCEPT_EULA=Y

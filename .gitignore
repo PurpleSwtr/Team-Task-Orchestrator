@@ -1,6 +1,3 @@
-Storybook/
-db-password.env
-
 # ===================================================================
 # Fichiers secrets et de configuration locale
 # NE JAMAIS METTRE DE MOTS DE PASSE OU DE CLÉS D'API DANS GIT !
@@ -14,11 +11,9 @@ db-password.env
 # Les artefacts sont générés à partir du code source.
 # ===================================================================
 
-# Backend - .NET/ASP.NET Core
 TodoListAPI/bin/
 TodoListAPI/obj/
 
-# Frontend - Node.js
 Frontend/node_modules/
 Frontend/dist/
 Frontend/dist-ssr/
