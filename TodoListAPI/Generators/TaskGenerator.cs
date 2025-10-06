@@ -1,8 +1,3 @@
-// Generators/TaskGenerator.cs
-using System;
-using System.IO;
-using Microsoft.CodeAnalysis.Diagnostics;
-using TodoListAPI.Controllers;
 using TodoListAPI.Models;
 
 using TaskEntity = TodoListAPI.Models.Task;
@@ -43,7 +38,7 @@ namespace TodoListAPI.Generators
                 {
                     TaskName = GetTask(),
                     Description = "Сгенерировано автоматически",
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
                 };
                 context.Tasks.Add(newTask);
             }

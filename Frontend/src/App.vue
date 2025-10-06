@@ -2,6 +2,7 @@
 import { RouterView } from 'vue-router'
 import { ref, onMounted, provide, readonly } from 'vue' 
 import apiClient from './api'; 
+import LoadingCircle from './components/ui/LoadingCircle.vue';
 
 const isLoggedIn = ref(false)
 const isAuthLoading = ref(true) 
@@ -40,7 +41,7 @@ provide('auth', {
 
 <template>
   <div v-if="isAuthLoading" class="loading-screen">
-    <p>Загрузка...</p>
+    <LoadingCircle/>
   </div>
   
   <RouterView v-else class="app"/>
@@ -56,7 +57,7 @@ provide('auth', {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  font-size: 1.5rem;
+  font-size: 4.5rem;
   color: #333;
 }
 </style>

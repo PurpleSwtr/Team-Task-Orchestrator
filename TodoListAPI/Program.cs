@@ -8,17 +8,11 @@ using System.Text;
 using Task = System.Threading.Tasks.Task;
 
 
-using TodoListAPI.Generators; // <-- ДОБАВЬ ЭТУ СТРОКУ В САМОМ ВЕРХУ ФАЙЛА
+using TodoListAPI.Generators;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Console.WriteLine("--- ЗАПУСК ТЕСТА ГЕНЕРАТОРА ---");
 
-var taskGenerator = new DataGeneratorTask();
-var new_task = taskGenerator.GetTask();
-Console.WriteLine(new_task);
-Console.WriteLine("--- ТЕСТ ГЕНЕРАТОРА ЗАВЕРШЕН ---");
-return;
 var configuration = builder.Configuration;
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -67,7 +61,7 @@ builder.Services.AddCors(options =>
             policy.WithOrigins("http://localhost:5173")
                   .AllowAnyHeader()
                   .AllowAnyMethod()
-                  .AllowCredentials(); 
+                  .AllowCredentials(); // это заюзал для доступа к localstorage и кукисам
         });
 });
 
@@ -101,7 +95,6 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseCors("VueApp");
-// ----------------------------------------
 
 app.UseAuthentication();
 app.UseAuthorization();

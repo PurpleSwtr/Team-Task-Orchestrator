@@ -8,5 +8,5 @@ public partial class Status
 {
     public int IdStatus { get; set; }
     public string? Название { get; set; }
-    public virtual ICollection<ApplicationUser> Users { get; set; } = new List<ApplicationUser>(); // <--- ИЗМЕНИТЬ НА ApplicationUser
+    public virtual ICollection<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
 }

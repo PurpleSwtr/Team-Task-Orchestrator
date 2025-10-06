@@ -99,7 +99,7 @@ namespace TodoListAPI.Controllers
 
             _context.Tasks.Remove(task);
             await _context.SaveChangesAsync();
-            
+
 
             return NoContent();
         }
@@ -107,6 +107,35 @@ namespace TodoListAPI.Controllers
         private bool TaskExists(int id)
         {
             return _context.Tasks.Any(e => e.IdTask == id);
+        }
+        [HttpDelete("clear")]
+        [Authorize]
+        public async Task<IActionResult> ClearAllTasks()
+        {
+            try
+            {
+                var entityType = _context.Model.FindEntityType(typeof(Task));
+                if (entityType == null)
+                {
+                    return NotFound("Не удалось найти метаданные для сущности Task.");
+                }
+                
+                var tableName = entityType.GetTableName();
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    return StatusCode(500, "Не удалось определить имя таблицы для сущности Task.");
+                }
+
+                string sqlCommand = $"DELETE FROM [{tableName}]";
+
+                await _context.Database.ExecuteSqlRawAsync(sqlCommand);
+
+                return Ok(new { Message = $"Все записи в таблице '{tableName}' были успешно удалены." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Произошла внутренняя ошибка сервера.", Error = ex.Message });
+            }
         }
     }
 }

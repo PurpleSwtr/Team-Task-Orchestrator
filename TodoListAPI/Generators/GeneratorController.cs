@@ -24,12 +24,6 @@ namespace TodoListAPI.Controllers
             public string? GeneratorTable { get; set; }
             public int CountGenerations { get; set; }
         }
-        private Dictionary<string, object> _generators = new Dictionary<string, object>();
-
-        public void GeneratorsInit()
-        {
-            _generators["Tasks"] = new Generators.DataGeneratorTask();
-        }
 
         [HttpGet]
         public IActionResult GetAllTableNames()
@@ -41,6 +35,16 @@ namespace TodoListAPI.Controllers
             return Ok(tableNames);
         }
 
+        // ВРОДЕ ХОРОШАЯ ИДЕЯ, НО МНЕ ПОКАЗАЛОСЬ ИЗБЫТОЧНО, И МОЖНО ОГРАНИЧИТЬСЯ СВИТЧ-КЕЙСОМ ДЛЯ НЕ ТАКОГО БОЛЬШОГО
+        // КОЛИЧЕСТВА ТАБЛИЦ, НО В ТЕОРИИ ЭТО КОНЕЧНО МОЖНО БЫЛО БЫ ВЫНЕСТИ В ОТДЕЛЬНУЮ ФАБРИКУ
+
+        // private Dictionary<string, object> _generators = new Dictionary<string, object>();
+
+        // private void GeneratorsInit()
+        // {
+        //     _generators["Tasks"] = new Generators.DataGeneratorTask();
+        // }
+
         [HttpPost]
         public async Task<IActionResult> StartGeneration([FromBody] GenerationRequest request)
         {
@@ -50,11 +54,15 @@ namespace TodoListAPI.Controllers
                     var taskGenerator = new DataGeneratorTask();
                     await taskGenerator.Generate(_context, request.CountGenerations);
                     break;
+                case "aspnetusers":
+                    var userGenerator = new DataGeneratorUser();
+                    await userGenerator.Generate(_context, request.CountGenerations);
+                    break;
                 default:
                     return NotFound($"Генератор для '{request.GeneratorTable}' не найден.");
+
             }
             return Ok("Генерация завершена.");
         }
-
     }
 }

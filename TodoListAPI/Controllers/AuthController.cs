@@ -66,7 +66,7 @@ namespace TodoListAPI.Controllers
         public IActionResult GetCurrentUser()
         {
             var userEmail = User.FindFirstValue(ClaimTypes.Email);
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // или Sub
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); 
 
             if (string.IsNullOrEmpty(userEmail))
             {

@@ -5,10 +5,11 @@
         <option v-for="table in tables">{{table}}</option>
     </select>
 
-    <input type="number" class="border rounded-md mr-4 py-1 bg-gray-100 border-gray-400 outline-0" placeholder="Количество генераций">
+    <input v-model="cnt_generations" type="number" class="border rounded-md mr-4 py-1 bg-gray-100 border-gray-400 outline-0" placeholder="Количество генераций">
 
 
-    <AppButton message='Сгенерировать' @click="GenStart"></AppButton>
+    <AppButton :message='message' :statusLoading="isLoading" @click="GenStart"></AppButton>
+    <span class="pl-4 text-xl text-gray-800">{{status}}</span>
 
 </template>
 
@@ -16,8 +17,13 @@
 import apiClient from '@/api';
 import AppButton from '@/components/ui/AppButton.vue';
 import {onMounted, ref} from 'vue'
-let selected = ref('')
 const tables = ref<string[]>([])
+
+let status = ref('')
+let selected = ref('')
+let cnt_generations = ref('')
+let isLoading = ref(false)
+let message = ref('Сгенерировать')
 
 const getTables = async () => {
     
@@ -32,8 +38,20 @@ const getTables = async () => {
 
 onMounted(getTables);
 
-function GenStart() {
-// Будем отправлять в апишку данные наших плейсхолдеорв
+const GenStart = async () => {
+    console.log("Начало генерации...")
+    isLoading.value = true
+    try{
+        await apiClient.post('/Generator', {
+        generatorTable: selected.value,
+        countGenerations: cnt_generations.value,
+        })
+        status.value = 'Готово!'
+    }
+    catch {
+        status.value = 'Генерация не завершена!'
+    }
+    isLoading.value = false
 };
 
 </script>
