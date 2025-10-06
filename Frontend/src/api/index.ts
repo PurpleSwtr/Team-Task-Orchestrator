@@ -5,7 +5,6 @@ const apiClient = axios.create({
   withCredentials: true
 });
 
-// Перехватчик запросов
 apiClient.interceptors.request.use(request => {
   const { method, url, data } = request;
   // console.log(`${method?.toUpperCase()} ${url}`, data ? { data } : '');
