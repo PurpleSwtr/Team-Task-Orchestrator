@@ -43,7 +43,7 @@ namespace TodoListAPI.Controllers
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddDays(2)
+                    Expires = DateTime.UtcNow.AddMinutes(120)
                 };
 
                 Response.Cookies.Append("jwtToken", token, cookieOptions);

@@ -4,7 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using TodoListAPI.Models; // Важно, чтобы была ссылка на ApplicationUser
+using TodoListAPI.Models;
 
 namespace TodoListAPI.Services
 {
@@ -13,7 +13,6 @@ namespace TodoListAPI.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
 
-        // Внедряем UserManager для работы с пользователями и IConfiguration для доступа к секретному ключу
         public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration)
         {
             _userManager = userManager;
@@ -32,11 +31,9 @@ namespace TodoListAPI.Services
             var user = await _userManager.FindByEmailAsync(email);
             if (user != null && await _userManager.CheckPasswordAsync(user, password))
             {
-                // Логин и пароль верные, генерируем JWT токен
                 return GenerateJwtToken(user);
             }
 
-            // Если что-то не так, возвращаем null
             return null;
         }
 
@@ -56,7 +53,7 @@ namespace TodoListAPI.Services
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(120),
+                expires: DateTime.UtcNow.AddMinutes(120),
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
