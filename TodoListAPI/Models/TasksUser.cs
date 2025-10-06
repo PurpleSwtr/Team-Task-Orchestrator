@@ -7,7 +7,7 @@ public partial class TasksUser
 {
     public string IdAssignees { get; set; } = null!;
     public int IdTask { get; set; }
-    public string IdUser { get; set; } // <--- ИЗМЕНИТЬ НА STRING
+    public string IdUser { get; set; }
     public virtual Task IdTaskNavigation { get; set; } = null!;
-    public virtual ApplicationUser IdUserNavigation { get; set; } = null!; // <--- ИЗМЕНИТЬ НА ApplicationUser
+    public virtual ApplicationUser IdUserNavigation { get; set; } = null!;
 }

@@ -7,11 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Task = System.Threading.Tasks.Task;
 
-
-using TodoListAPI.Generators;
-
 var builder = WebApplication.CreateBuilder(args);
-
 
 var configuration = builder.Configuration;
 

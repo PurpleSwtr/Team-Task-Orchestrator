@@ -109,7 +109,6 @@ namespace TodoListAPI.Controllers
             return _context.Tasks.Any(e => e.IdTask == id);
         }
         [HttpDelete("clear")]
-        [Authorize]
         public async Task<IActionResult> ClearAllTasks()
         {
             try

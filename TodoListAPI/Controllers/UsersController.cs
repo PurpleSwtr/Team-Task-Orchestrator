@@ -44,9 +44,7 @@ namespace TodoListAPI.Controllers
             return Ok(user);
         }
 
-        // Примечание: Логика создания (POST), обновления (PUT) и удаления (DELETE)
-        // пользователей Identity сложнее и выполняется через методы UserManager,
-        // (например, CreateAsync, UpdateAsync, DeleteAsync), а не напрямую через DbContext.
-        // Этот базовый код для чтения данных теперь корректен.
+        // добавить логику создания (POST), обновления (PUT) и удаления (DELETE)
+
     }
 }
