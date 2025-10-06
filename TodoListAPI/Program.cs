@@ -57,7 +57,7 @@ builder.Services.AddCors(options =>
             policy.WithOrigins("http://localhost:5173")
                   .AllowAnyHeader()
                   .AllowAnyMethod()
-                  .AllowCredentials(); // это заюзал для доступа к localstorage и кукисам
+                  .AllowCredentials(); // localstorage и кукисы
         });
 });
 
