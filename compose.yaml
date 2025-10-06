@@ -1,7 +1,7 @@
 services:
   server:
     build:
-      context: .
+      context: ./TodoListAPI
       target: final
     ports:
       - "8080:8080"
