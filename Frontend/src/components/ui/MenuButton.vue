@@ -3,45 +3,60 @@
         :to="props.route_path" 
         class="flex items-center p-2 rounded-lg hover:bg-gray-900 transition-colors hover:text-yellow-600 :text-yellow-500"
     >
-        <component :is="iconMap[props.icon]" class="w-6 h-6" />
+        <!-- <component :is="iconMap[props.icon]" class="w-6 h-6" /> -->
+        <AppIcon :icon_name="svgMap[props.icon]" class="w-6 h-6" />
         <span class="ml-3">{{props.message}}</span>
     </RouterLink>    
 </template>
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
+import AppIcon from './AppIcon.vue';
 
-import { ref, type Component } from 'vue'; 
-import HomeIcon from '@/components/icons/HomeIcon.vue';
+// import { ref, type Component } from 'vue'; 
+// import HomeIcon from '@/components/icons/HomeIcon.vue';
 
-import LoginIcon from '@/components/icons/LoginIcon.vue';
-import LogoutIcon from '@/components/icons/LogoutIcon.vue';
-import SettingsIcon from '../icons/SettingsIcon.vue';
+// import LoginIcon from '@/components/icons/LoginIcon.vue';
+// import LogoutIcon from '@/components/icons/LogoutIcon.vue';
+// import SettingsIcon from '../icons/SettingsIcon.vue';
 
-import AboutIcon from '@/components/icons/AboutIcon.vue';
-import GeneratorIcon from '../icons/GeneratorIcon.vue';
-import StaticticsIcon from '../icons/StaticticsIcon.vue';
+// import AboutIcon from '@/components/icons/AboutIcon.vue';
+// import GeneratorIcon from '../icons/GeneratorIcon.vue';
+// import StaticticsIcon from '../icons/StaticticsIcon.vue';
 
-import MenuTaskIcon from '../icons/MenuTaskIcon.vue';
-import ProjectsIcon from '../icons/ProjectsIcon.vue';
-import TeamsIcon from '../icons/TeamsIcon.vue';
-import UsersIcon from '../icons/UsersIcon.vue';
+// import MenuTaskIcon from '../icons/MenuTaskIcon.vue';
+// import ProjectsIcon from '../icons/ProjectsIcon.vue';
+// import TeamsIcon from '../icons/TeamsIcon.vue';
+// import UsersIcon from '../icons/UsersIcon.vue';
 
 // const AppColor = ref("#fbbf24")
 
-const iconMap: { [key: string]: Component } = {
-  home: HomeIcon,
-  login: LoginIcon,
-  about: AboutIcon,
-  generator: GeneratorIcon,
-  settings: SettingsIcon,
-  logout: LogoutIcon,
-  projects: ProjectsIcon,
-  teams: TeamsIcon,
-  users: UsersIcon,
-  statistics: StaticticsIcon,
-  tasks: MenuTaskIcon
+// const iconMap: { [key: string]: Component } = {
+//   home: HomeIcon,
+//   login: LoginIcon,
+//   about: AboutIcon,
+//   generator: GeneratorIcon,
+//   settings: SettingsIcon,
+//   logout: LogoutIcon,
+//   projects: ProjectsIcon,
+//   teams: TeamsIcon,
+//   users: UsersIcon,
+//   statistics: StaticticsIcon,
+//   tasks: MenuTaskIcon
+// };
 
+const svgMap: {[key: string]: string}= {
+  home: 'home',
+  login: 'login',
+  about: 'about',
+  tasks: 'menutask',
+  users: 'users',
+  teams: 'teams',
+  projects: 'projects',
+  generator: 'generator',
+  statictics: 'statictics',
+  settings: 'settings',
+  logout: 'logout',
 };
 
 const props = defineProps<{

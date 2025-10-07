@@ -3,7 +3,7 @@ import { RouterView, useRoute, useRouter, type RouteLocationNormalizedLoadedGene
 import { ref, onMounted, provide, readonly } from 'vue' 
 import apiClient from './api'; 
 import LoadingCircle from './components/ui/LoadingCircle.vue';
-import E_401 from './layouts/E_401.vue';
+import E_403 from './layouts/E_403.vue';
 import E_404 from './layouts/E_404.vue';
 
 const isLoggedIn = ref(false)
@@ -54,7 +54,11 @@ const existsCheck = () => {
 const accessCheck = () => {
   const router = useRoute()
 
-  if (accessList.includes(router.path)) {
+  if (isLoggedIn.value)
+  {
+    return false
+  }
+  else if (accessList.includes(router.path)) {
     return false
   }
   else
@@ -70,7 +74,7 @@ const accessCheck = () => {
     <LoadingCircle/>
   </div>
   <E_404 v-if="existsCheck()"></E_404>
-  <E_401 v-else-if="accessCheck()"></E_401>
+  <E_403 v-else-if="accessCheck()"></E_403>
   <RouterView v-else class="app"/>
 </template>
 

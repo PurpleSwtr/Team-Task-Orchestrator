@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
-import ErrorIcon from '@/components/icons/ErrorIcon.vue';
 import AppButton from '@/components/ui/AppButton.vue';
+import AppIcon from '@/components/ui/AppIcon.vue';
 import router from '@/router';
 import {ref} from 'vue'
 
@@ -18,7 +18,7 @@ const Getback = async () => {
         <div class="w-170 h-120 bg-white border-2 border-gray-300 rounded-3xl shadow-xl grid grid-rows-[auto_auto_1fr_auto] p-10">
             <div class="flex items-center gap-4">
                 <h1 class="text-8xl font-medium text-gray-600">404</h1>
-                <ErrorIcon class="w-26 h-26 ml-75 mt-2 text-orange-400"/>
+                <AppIcon icon_name="error" class="w-26 h-26 ml-75 mt-2 text-orange-400"/>
             </div>
             
             <h5 class="mt-4 text-3xl font-semibold tracking-wide text-gray-500">

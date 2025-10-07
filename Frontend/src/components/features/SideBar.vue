@@ -78,7 +78,7 @@
     {message: "Команды", route_path: "/teams", icon: "teams"},
     {message: "Проекты", route_path: "/projects", icon: "projects"},
     {message: "Генератор", route_path: "/generator", icon: "generator"},
-    {message: "Статистика", route_path: "/statistics", icon: "statistics"},
+    {message: "Статистика", route_path: "/statictics", icon: "statictics"},
   ]);
 
   const handleLogout = async () => {

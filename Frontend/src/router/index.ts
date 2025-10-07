@@ -65,8 +65,8 @@ export const router = createRouter({
           component: UsersPage,
         },
         {
-          path: 'statistics', 
-          name: 'statistics',  
+          path: 'statictics', 
+          name: 'statictics',   
           component: StatisticsPage,
         },
         {
