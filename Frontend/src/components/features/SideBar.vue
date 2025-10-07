@@ -31,8 +31,11 @@
             </li>
         </template>
         
-        <li class="mb-4">
-            <MenuButton message="О проекте" route_path="/about" icon="about"/>
+        <li v-if="!auth?.isLoggedIn.value" class="mb-4">
+            <MenuButton 
+            message="О проекте" 
+            route_path="/about" 
+            icon="about"/>
         </li>
       </ul>
 
@@ -79,6 +82,8 @@
     {message: "Проекты", route_path: "/projects", icon: "projects"},
     {message: "Генератор", route_path: "/generator", icon: "generator"},
     {message: "Статистика", route_path: "/statictics", icon: "statictics"},
+    {message: "Админ", route_path: "/admin_panel", icon: "audit"},
+
   ]);
 
   const handleLogout = async () => {

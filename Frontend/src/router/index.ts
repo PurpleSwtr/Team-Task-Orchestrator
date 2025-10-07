@@ -15,6 +15,7 @@ import TeamsPage from '@/views/TeamsPage.vue'
 import ProjectsPage from '@/views/ProjectsPage.vue'
 import UsersPage from '@/views/UsersPage.vue'
 import LoginRegisterPage from '@/views/auth/LoginRegisterPage.vue'
+import AdminPage from '@/views/AdminPage.vue'
 
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -78,6 +79,11 @@ export const router = createRouter({
           path: 'logout', 
           name: 'logout',  
           component: MainLayout,
+        },
+        {
+          path: 'admin_panel', 
+          name: 'admin_panel',  
+          component: AdminPage,
         },
       ],
     },

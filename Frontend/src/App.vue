@@ -73,9 +73,11 @@ const accessCheck = () => {
   <div v-if="isAuthLoading" class="loading-screen">
     <LoadingCircle/>
   </div>
-  <E_404 v-if="existsCheck()"></E_404>
-  <E_403 v-else-if="accessCheck()"></E_403>
-  <RouterView v-else class="app"/>
+  <body class="app">
+    <E_404 v-if="existsCheck()"></E_404>
+    <E_403 v-else-if="accessCheck()"></E_403>
+    <RouterView v-else/>
+  </body>
 </template>
 
 <style scoped>
@@ -84,6 +86,7 @@ const accessCheck = () => {
 }
 
 .loading-screen {
+  background-color: #e8e8e8;
   display: flex;
   justify-content: center;
   align-items: center;

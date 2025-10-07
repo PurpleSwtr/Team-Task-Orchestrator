@@ -57,6 +57,7 @@ const svgMap: {[key: string]: string}= {
   statictics: 'statictics',
   settings: 'settings',
   logout: 'logout',
+  audit: 'audit'
 };
 
 const props = defineProps<{
