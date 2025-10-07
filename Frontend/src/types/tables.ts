@@ -1,4 +1,4 @@
-export interface LineData {
+export interface UserData {
   id: string;
   firstName: string;
   secondName: string;

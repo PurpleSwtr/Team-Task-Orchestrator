@@ -13,7 +13,7 @@
 <script setup lang="ts">
 import TableForm from '@/components/features/Table/TableForm.vue';
 import { ref, onMounted } from 'vue';
-import type { LineData } from '@/types/tables';
+import type { UserData } from '@/types/tables';
 import apiClient from '@/api';
 
 const userColumns = ref([
@@ -23,7 +23,7 @@ const userColumns = ref([
     { key: 'email', label: 'Email' },
 ]);
 
-const users = ref<LineData[]>([]);
+const users = ref<UserData[]>([]);
 const isLoading = ref(false);
 
 const fetchUsers = async () => {

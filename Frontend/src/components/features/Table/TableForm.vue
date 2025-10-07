@@ -18,10 +18,10 @@
 
 <script setup lang="ts">
 import TableLine from './TableLine.vue';
-import type { LineData } from '@/types/tables';
+import type { UserData } from '@/types/tables';
 
 const props = defineProps<{
-    items: LineData[], 
+    items: UserData[], 
     columns: { key: string, label: string }[] 
 }>();
 </script>

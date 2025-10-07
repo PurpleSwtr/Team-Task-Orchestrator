@@ -13,9 +13,9 @@
 <script setup lang="ts">
 import AppIcon from '@/components/ui/AppIcon.vue';
 import TableElement from './TableElement.vue';
-import type { LineData } from '@/types/tables';
+import type { UserData } from '@/types/tables';
 
 const props = defineProps<{
-    element: LineData 
+    element: UserData 
 }>();
 </script>
