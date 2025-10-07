@@ -11,8 +11,8 @@
 # Les artefacts sont générés à partir du code source.
 # ===================================================================
 
-TodoListAPI/bin/
-TodoListAPI/obj/
+Backend/bin/
+Backend/obj/
 
 Frontend/node_modules/
 Frontend/dist/

@@ -6,6 +6,13 @@
     
     <nav class="flex flex-col flex-1">
       <ul class="flex-1">
+        <li class="mb-4">
+          <MenuButton 
+            message="Главная" 
+            icon="home" 
+            route_path="/"
+          />
+        </li>
         <li v-if="!auth?.isLoggedIn.value" class="mb-4">
           <MenuButton 
             message="Войти" 
@@ -66,7 +73,6 @@
   };
   
   const protectedItems = ref<MenuItem[]>([
-    {message: "Главная", route_path: "/", icon: "home"},
     {message: "Мои задачи", route_path: "/tasks", icon: "tasks"},
     {message: "Пользователи", route_path: "/users", icon: "users"},
     {message: "Команды", route_path: "/teams", icon: "teams"},
