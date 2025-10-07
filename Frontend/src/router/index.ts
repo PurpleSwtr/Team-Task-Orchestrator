@@ -15,13 +15,13 @@ import TeamsPage from '@/views/TeamsPage.vue'
 import ProjectsPage from '@/views/ProjectsPage.vue'
 import UsersPage from '@/views/UsersPage.vue'
 import LoginRegisterPage from '@/views/auth/LoginRegisterPage.vue'
-
+import E_401 from '@/layouts/E_401.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      component: MainLayout, 
+      component: E_401, 
       children: [ 
         {
           path: '', 
