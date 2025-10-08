@@ -5,9 +5,20 @@ using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+
+using Backend.Generators; 
 using Task = System.Threading.Tasks.Task;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// // ТЕСТОВЫЙ БЛОК
+
+// // --- НАЧАЛО: Обновленный вызов генератора ---
+// var emailGenerator = new DataGeneratorEmail();
+// string filePath = Path.Combine(AppContext.BaseDirectory, "Generators", "Files", "Emails","users.csv");
+// emailGenerator.GetRandomUsername(filePath); // <-- Теперь просто один вызов
+// return;
+// // --- КОНЕЦ ---
 
 var configuration = builder.Configuration;
 
@@ -67,6 +78,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+
 
 using (var scope = app.Services.CreateScope())
 {

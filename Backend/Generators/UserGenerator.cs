@@ -125,6 +125,12 @@ namespace Backend.Generators
             {
                 var fullName = new FullName();
                 fullName = GetUser();
+                var emailGenerator = new DataGeneratorEmail();
+                string filePath = Path.Combine(AppContext.BaseDirectory, "Generators", "Files", "Emails","users.csv");
+                string email = emailGenerator.GetRandomUsername(filePath);
+
+                string short_first = fullName.FirstName.Substring(0,1); 
+                string short_last = fullName.LastName.Substring(0,1);  
 
                 var newUser = new Models.ApplicationUser
                 {
@@ -132,6 +138,8 @@ namespace Backend.Generators
                     SecondName = fullName.MiddleName,
                     PatronymicName = fullName.LastName,
                     RegistrationTime = DateTime.UtcNow,
+                    Email = email,
+                    ShortName = $"{fullName.MiddleName} {short_first}.{short_last}."
                 };
                 context.Users.Add(newUser);
             }

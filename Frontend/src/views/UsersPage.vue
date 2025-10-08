@@ -1,14 +1,7 @@
 // views/UsersPage.vue
 
 <template>
-    <div>
-        <div class="ml-15 mb-5 h-15 w-70 bg-white rounded-3xl border-2 border-gray-300">
-            <!-- <span class="flex justify-start pt-4 pl-8 text-xl text-gray-400 font-">Найти</span>
-              -->
-            <input type="search" class="flex justify-start pt-4 pl-8 text-xl text-gray-400 outline-0" placeholder="Поиск"></input>
-
-        </div>
-    </div>
+    <AppSearch></AppSearch>
     <div class="flex justify-center">
         <TableForm 
             class="flex-1"
@@ -23,6 +16,7 @@ import TableForm from '@/components/features/Table/TableForm.vue';
 import { ref, onMounted } from 'vue';
 import type { UserData } from '@/types/tables';
 import apiClient from '@/api';
+import AppSearch from '@/components/ui/AppSearch.vue';
 
 const userColumns = ref([
     { key: 'firstName', label: 'Имя' },
