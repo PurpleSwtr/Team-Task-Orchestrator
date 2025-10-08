@@ -3,18 +3,16 @@
 </template>
 
 <script setup lang="ts">
-import apiClient from '@/api';
 import AppWarnButton from '@/components/ui/AppWarnButton.vue';
+import { useApiAsyncDelete } from '@/composables/useApi';
 import { ref } from 'vue';
 
 const isLoading = ref(false)
 
 const delAllUsers = async () => {
     isLoading.value = true
-    const response = await apiClient.delete('/Users/DeleteAll');
-    if (response) {
-        isLoading.value = false
-    }
+    useApiAsyncDelete('/Users/DeleteAll')
+    isLoading.value = false
 }
 
 </script>

@@ -1,7 +1,7 @@
 <template>
     <tr class="group transition-colors">
         <td class="bg-gray-100 group-hover:bg-gray-200 px-4 py-3 rounded-l-xl border-y-2 border-l-2 border-gray-200">
-                <AppIcon icon_name="miniuser" class="mx-auto text-gray-700 hover:cursor-pointer hover:-translate-y-0.5 duration-500 hover:scale-102" @click="GetUserData"/>
+                <AppIcon icon_name="miniuser" class="mx-auto text-gray-700 hover:cursor-pointer hover:-translate-y-0.5 duration-500 hover:scale-110" @click="GetUserData"/>
         </td>
 
         <template v-for="(value, key) in props.element">
@@ -14,6 +14,7 @@
 import AppIcon from '@/components/ui/AppIcon.vue';
 import TableElement from './TableElement.vue';
 import type { UserData } from '@/types/tables';
+import { useApiAsyncGet } from '@/composables/useApi';
 
 const props = defineProps<{
     element: UserData 
@@ -21,6 +22,8 @@ const props = defineProps<{
 
 function GetUserData() {
     console.log(`Пользователь ${props.element.id}`)
+    const response = useApiAsyncGet(`/Users/${props.element.id}`)
+    console.log(response)  
 }
 
 </script>
