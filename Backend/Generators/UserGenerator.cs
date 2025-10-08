@@ -2,6 +2,7 @@ using Backend.Models;
 
 using TaskEntity = Backend.Models.Task;
 using Task = System.Threading.Tasks.Task;
+using Backend.Migrations;
 
 namespace Backend.Generators
 {
@@ -19,6 +20,8 @@ namespace Backend.Generators
             public string? FirstName { get; set; }
             public string? MiddleName { get; set; }
             public string? LastName { get; set; }
+            public string? Gender { get; set; }
+
         }
 
         private Dictionary<string, FullNameList>? _maleNames;
@@ -98,25 +101,13 @@ namespace Backend.Generators
             return fullName;
         }
 
-        public FullName GetUser()
+        public FullName GetUser(string gender)
         {
             if (_maleNames == null || _femaleNames == null)
             {
                 ReadData();
             }
-
-            Random random = new();
-
-            int randomNumber = random.Next(2);
-
-            if (randomNumber == 0)
-            {
-                return GenerateRandomName("Female");
-            }
-            else
-            {
-                return GenerateRandomName("Male");
-            }
+            return GenerateRandomName(gender);
         }
 
         public async Task Generate(TodoListDbContext context, int count)
@@ -124,7 +115,19 @@ namespace Backend.Generators
             for (int i = 0; i < count; i++)
             {
                 var fullName = new FullName();
-                fullName = GetUser();
+                Random random = new();
+                string gender = "";
+                int randomNumber = random.Next(2);
+                if (randomNumber == 0)
+                {
+                    gender = "Female";
+                }
+                else
+                {
+                    gender = "Male";
+                }
+                fullName = GetUser(gender);
+
                 var emailGenerator = new DataGeneratorEmail();
                 string filePath = Path.Combine(AppContext.BaseDirectory, "Generators", "Files", "Emails","users.csv");
                 string email = emailGenerator.GetRandomUsername(filePath);
@@ -136,8 +139,9 @@ namespace Backend.Generators
                 {
                     FirstName = fullName.FirstName,
                     SecondName = fullName.MiddleName,
-                    PatronymicName = fullName.LastName,
+                    LastName = fullName.LastName,
                     RegistrationTime = DateTime.UtcNow,
+                    Gender = gender,
                     Email = email,
                     ShortName = $"{fullName.MiddleName} {short_first}.{short_last}."
                 };

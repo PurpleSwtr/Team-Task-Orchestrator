@@ -1,8 +1,8 @@
 <template>
     <button :disabled="props.statusLoading" 
     class="cursor-pointer 
-    bg-green-600 
-    hover:bg-green-700 
+    bg-red-600 
+    hover:bg-red-700 
     transition-colors 
     rounded-xl 
     px-5 py-2 

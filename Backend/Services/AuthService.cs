@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Backend.Models;
+using Backend.Models.DTO;
 
 namespace Backend.Services
 {
@@ -19,10 +20,19 @@ namespace Backend.Services
             _configuration = configuration;
         }
 
-        public async Task<IdentityResult> RegisterUserAsync(string email, string password)
+        public async Task<IdentityResult> RegisterUserAsync(RegisterModel model)
         {
-            var user = new ApplicationUser { UserName = email, Email = email };
-            var result = await _userManager.CreateAsync(user, password);
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                FirstName = model.FirstName,       // <-- Новое поле
+                SecondName = model.SecondName,     // <-- Новое поле
+                LastName = model.LastName, // <-- Новое поле
+                RegistrationTime = DateTime.UtcNow,
+                ShortName = $"{model.SecondName} {model.FirstName[0]}.{(string.IsNullOrEmpty(model.LastName) ? "" : model.LastName[0] + ".")}"
+            };
+            var result = await _userManager.CreateAsync(user, model.Password);
             return result;
         }
 

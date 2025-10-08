@@ -44,6 +44,34 @@ namespace Backend.Controllers
             return Ok(user);
         }
 
+        // DELETE: api/Users/DeleteAll
+        [HttpDelete("DeleteAll")]
+        [Authorize] // Ограничиваем доступ только для администраторов
+        public async Task<IActionResult> DeleteAllUsers()
+        {
+            try
+            {
+                // Получаем всех пользователей
+                var users = await _userManager.Users.ToListAsync();
+                // Удаляем каждого пользователя
+                foreach (var user in users)
+                {
+                    var result = await _userManager.DeleteAsync(user);
+                    if (!result.Succeeded)
+                    {
+                        // Логируем ошибки, если удаление не удалось
+                        var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                        return BadRequest($"Failed to delete user {user.UserName}: {errors}");
+                    }
+                }
+                return Ok($"Successfully deleted {users.Count} users");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+       
         // добавить логику создания (POST), обновления (PUT) и удаления (DELETE)
 
     }

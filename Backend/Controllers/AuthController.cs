@@ -21,7 +21,7 @@ namespace Backend.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            var result = await _authService.RegisterUserAsync(model.Email, model.Password);
+            var result = await _authService.RegisterUserAsync(model);
 
             if (result.Succeeded)
             {

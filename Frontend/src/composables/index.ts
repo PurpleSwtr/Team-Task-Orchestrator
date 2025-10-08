@@ -1,0 +1,1 @@
+export { useStrip } from './useStrip'

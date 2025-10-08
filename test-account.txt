@@ -1,2 +1,5 @@
 test@example.com
+Баринов
+Кирилл
+Александрович
 SuperBario006!

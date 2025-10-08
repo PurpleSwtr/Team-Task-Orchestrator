@@ -4,6 +4,7 @@ using Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(TodoListDbContext))]
-    partial class TodoListDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251008191012_AddGenderToUser")]
+    partial class AddGenderToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,9 +56,6 @@ namespace Backend.Migrations
                     b.Property<int?>("IdUserStatusNavigationIdStatus")
                         .HasColumnType("int");
 
-                    b.Property<string>("LastName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
@@ -74,6 +74,9 @@ namespace Backend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PatronymicName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")

@@ -1,7 +1,9 @@
 export interface UserData {
   id: string;
-  firstName: string;
-  secondName: string;
-  patronymicName: string | null; 
+  gender: string;
+  // firstName: string;
+  // secondName: string;
+  // lastName: string | null; 
+  shortName: string;
   email: string | null; 
 }
