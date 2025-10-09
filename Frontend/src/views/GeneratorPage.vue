@@ -1,12 +1,12 @@
 <template>
     <!-- <span>Таблица: </span> -->
-    <select v-model="selected" class="border rounded-md mr-4 py-1 bg-gray-100 border-gray-400">
+    <select v-model="selected" class="w-50 border rounded-lg mr-4 py-1 bg-gray-100 border-gray-400">
         <option disabled value="">Выберите таблицу</option>
         <option v-for="table in tables
         ">{{table}}</option>
     </select>
 
-    <input v-model="cnt_generations" type="number" class="border rounded-md mr-4 py-1 bg-gray-100 border-gray-400 outline-0" placeholder="Количество генераций">
+    <input v-model="cnt_generations" type="number" class="w-50 border rounded-lg mr-4 py-1 bg-gray-100 border-gray-400 outline-0" placeholder="Количество генераций">
 
 
     <AppButton :message='message' :statusLoading="isLoading" @click="GenStart"></AppButton>
@@ -31,11 +31,8 @@ let isLoading = ref(false)
 let message = ref('Сгенерировать')
 
 const getTables = async () => {
-    
     try {
     tables.value = (await apiClient.get('/Generator')).data
-
-
     }   
     catch {
 
