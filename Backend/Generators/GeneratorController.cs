@@ -5,6 +5,7 @@ using System.Linq;
 using Backend.Models;
 using Backend.Generators;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Microsoft.AspNetCore.Identity; 
 namespace Backend.Controllers
 {
     [ApiController]
@@ -13,10 +14,17 @@ namespace Backend.Controllers
     public class GeneratorController : ControllerBase
     {
         private readonly TodoListDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public GeneratorController(TodoListDbContext context)
+        public GeneratorController(
+            TodoListDbContext context, 
+            UserManager<ApplicationUser> userManager, 
+            RoleManager<IdentityRole> roleManager)
         {
             _context = context;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         public class GenerationRequest
@@ -56,7 +64,7 @@ namespace Backend.Controllers
                     break;
                 case "aspnetusers":
                     var userGenerator = new DataGeneratorUser();
-                    await userGenerator.Generate(_context, request.CountGenerations);
+                    await userGenerator.Generate(_context, request.CountGenerations, _userManager, _roleManager);
                     break;
                 default:
                     return NotFound($"Генератор для '{request.GeneratorTable}' не найден.");

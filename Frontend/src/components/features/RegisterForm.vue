@@ -80,13 +80,6 @@ const auth = inject('auth') as {
 };
 const buttonLoading = ref(false);
 
-const user = reactive({
-  firstName: '',
-  secondName: '',
-  lastName: '',
-  email: '',
-  password: '',
-});
 const firstName = ref('');
 const secondName = ref('');
 const lastName = ref('');
@@ -102,7 +95,7 @@ const errorMessage = ref('')
 
 const tryRegister = async () => {
     errorMessage.value = '';
-    
+    console.log(gender.value)
     if (password.value == password_check.value) {
       try {
           buttonLoading.value = true; 

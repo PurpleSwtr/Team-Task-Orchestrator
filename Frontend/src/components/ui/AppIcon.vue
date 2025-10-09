@@ -1,5 +1,3 @@
-// src/components/ui/AppIcon.vue
-
 <script setup lang="ts">
 import { computed } from 'vue';
 

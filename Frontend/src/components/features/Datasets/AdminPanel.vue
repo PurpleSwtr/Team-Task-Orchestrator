@@ -18,8 +18,6 @@ const userColumns = ref([
     // { key: 'firstName', label: 'Имя' },
     // { key: 'secondName', label: 'Фамилия' },
     // { key: 'lastName', label: 'Отчество' },
-    { key: 'role', label: 'Роль' },
-
     { key: 'email', label: 'Email' },
 ]);
 
@@ -44,7 +42,6 @@ const fetchUsers = async () => {
                 // firstName: user.firstName,
                 // secondName: user.secondName,
                 // lastName: user.lastName,
-                role: user.roles[0],
                 email: user.email,
             }));
         } else {

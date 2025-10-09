@@ -5,5 +5,6 @@ export interface UserData {
   // secondName: string;
   // lastName: string | null; 
   shortName: string;
+  role: Array<[]>;
   email: string | null; 
 }

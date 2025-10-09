@@ -29,6 +29,7 @@ namespace Backend.Services
                 FirstName = model.FirstName,
                 SecondName = model.SecondName,
                 LastName = model.LastName,
+                Gender = model.Gender,
                 RegistrationTime = DateTime.UtcNow,
                 ShortName = $"{model.SecondName} {model.FirstName[0]}.{(string.IsNullOrEmpty(model.LastName) ? "" : model.LastName[0] + ".")}"
             };

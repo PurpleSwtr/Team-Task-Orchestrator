@@ -3,7 +3,9 @@ using Backend.Models;
 using TaskEntity = Backend.Models.Task;
 using Task = System.Threading.Tasks.Task;
 using Backend.Migrations;
-
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 namespace Backend.Generators
 {
     public class DataGeneratorUser
@@ -110,22 +112,28 @@ namespace Backend.Generators
             return GenerateRandomName(gender);
         }
 
-        public async Task Generate(TodoListDbContext context, int count)
+        public async Task Generate(
+            TodoListDbContext context, 
+            int count, 
+            UserManager<ApplicationUser> userManager, 
+            RoleManager<IdentityRole> roleManager)
         {
+            var roles = await roleManager.Roles
+                .Where(r => r.Name != "Admin")
+                .Select(r => r.Name)
+                .ToListAsync();
+
+            if (roles.Count == 0)
+            {
+                return; 
+            }
+
             for (int i = 0; i < count; i++)
             {
                 var fullName = new FullName();
                 Random random = new();
-                string gender = "";
-                int randomNumber = random.Next(2);
-                if (randomNumber == 0)
-                {
-                    gender = "Female";
-                }
-                else
-                {
-                    gender = "Male";
-                }
+                string gender = random.Next(2) == 0 ? "Female" : "Male";
+                
                 fullName = GetUser(gender);
 
                 var emailGenerator = new DataGeneratorEmail();
@@ -143,11 +151,18 @@ namespace Backend.Generators
                     RegistrationTime = DateTime.UtcNow,
                     Gender = gender,
                     Email = email,
+                    UserName = email,
                     ShortName = $"{fullName.MiddleName} {short_first}.{short_last}."
                 };
-                context.Users.Add(newUser);
+
+                var result = await userManager.CreateAsync(newUser, "GeneratedUser123!");
+
+                if (result.Succeeded)
+                {
+                    string randomRole = roles[random.Next(roles.Count)];
+                    await userManager.AddToRoleAsync(newUser, randomRole);
+                }
             }
-            await context.SaveChangesAsync();
         }
 
     }
