@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 namespace Backend.Controllers
 {
     [ApiController]
-    [Authorize]
+    [Authorize (Roles = "Admin")]
     [Route("api/[controller]")]
     public class GeneratorController : ControllerBase
     {

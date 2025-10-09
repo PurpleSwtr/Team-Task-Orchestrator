@@ -4,7 +4,6 @@
 # ===================================================================
 *.env.local
 .env
-Backend/Generators/Files
 # ===================================================================
 # Dépendances et artefacts de construction
 # Les dépendances doivent être installées, pas stockées dans Git.
@@ -13,6 +12,8 @@ Backend/Generators/Files
 
 Backend/bin/
 Backend/obj/
+Backend/Generators/Files
+Backend/appsettings.Development.json
 
 Frontend/node_modules/
 Frontend/dist/

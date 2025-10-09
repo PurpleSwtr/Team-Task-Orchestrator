@@ -37,6 +37,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
+
 .AddJwtBearer(options =>
 {
     options.Events = new JwtBearerEvents
@@ -88,6 +89,7 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<TodoListDbContext>();
         context.Database.Migrate();
+        await DbInitializer.InitializeAsync(services);
     }
     catch (Exception ex)
     {

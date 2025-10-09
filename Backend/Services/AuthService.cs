@@ -26,38 +26,54 @@ namespace Backend.Services
             {
                 UserName = model.Email,
                 Email = model.Email,
-                FirstName = model.FirstName,       // <-- Новое поле
-                SecondName = model.SecondName,     // <-- Новое поле
-                LastName = model.LastName, // <-- Новое поле
+                FirstName = model.FirstName,
+                SecondName = model.SecondName,
+                LastName = model.LastName,
                 RegistrationTime = DateTime.UtcNow,
                 ShortName = $"{model.SecondName} {model.FirstName[0]}.{(string.IsNullOrEmpty(model.LastName) ? "" : model.LastName[0] + ".")}"
             };
-            var result = await _userManager.CreateAsync(user, model.Password);
-            return result;
+            var creationResult = await _userManager.CreateAsync(user, model.Password);
+
+            if (!creationResult.Succeeded)
+            {
+                return creationResult;
+            }
+
+            var addToRoleResult = await _userManager.AddToRoleAsync(user, "Admin");
+
+            return addToRoleResult; 
         }
 
         public async Task<string> LoginUserAsync(string email, string password)
         {
             var user = await _userManager.FindByEmailAsync(email);
+            
             if (user != null && await _userManager.CheckPasswordAsync(user, password))
             {
-                return GenerateJwtToken(user);
+                return await GenerateJwtToken(user);
             }
-
             return null;
         }
 
-        private string GenerateJwtToken(ApplicationUser user)
+        private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var userRoles = await _userManager.GetRolesAsync(user);
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
+
+            foreach (var userRole in userRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, userRole));
+            }
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],

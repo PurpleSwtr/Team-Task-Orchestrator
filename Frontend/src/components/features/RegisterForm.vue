@@ -74,8 +74,10 @@ import AppInput from '../ui/AppInput.vue';
 
 const emit = defineEmits(['switchToLogin']);
 const router = useRouter();
-const auth = inject('auth') as { setLoggedIn: () => void };
-
+const auth = inject('auth') as { 
+  setLoggedIn: () => void;
+  checkAuthStatus: () => Promise<void>; // Убедись, что checkAuthStatus прокинут через provide
+};
 const buttonLoading = ref(false);
 
 const user = reactive({
@@ -119,6 +121,8 @@ const tryRegister = async () => {
           
           if (auth) {
             auth.setLoggedIn();
+            await auth.checkAuthStatus();
+            await router.push('/');
           }
           
           await router.push('/'); 

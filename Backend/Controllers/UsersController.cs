@@ -15,18 +15,31 @@ namespace Backend.Controllers
     public class UsersController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-
-        public UsersController(UserManager<ApplicationUser> userManager)
+        private readonly TodoListDbContext _context;
+        public UsersController(UserManager<ApplicationUser> userManager, TodoListDbContext context)
         {
             _userManager = userManager;
+            _context = context;
         }
 
         // GET: api/Users
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ApplicationUser>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<UserWithRolesDto>>> GetUsers()
         {
-            // Получаем пользователей через UserManager
-            var users = await _userManager.Users.ToListAsync();
+            var users = await _context.Users
+                .Select(user => new UserWithRolesDto
+                {
+                    Id = user.Id,
+                    ShortName = user.ShortName,
+                    Email = user.Email,
+                    Gender = user.Gender,
+                    Roles = (from userRole in _context.UserRoles
+                            join role in _context.Roles on userRole.RoleId equals role.Id
+                            where userRole.UserId == user.Id
+                            select role.Name).ToList()
+                })
+                .ToListAsync();
+
             return Ok(users);
         }
 
@@ -46,20 +59,17 @@ namespace Backend.Controllers
 
         // DELETE: api/Users/DeleteAll
         [HttpDelete("DeleteAll")]
-        [Authorize] // Ограничиваем доступ только для администраторов
+        [Authorize (Roles = "Admin")]
         public async Task<IActionResult> DeleteAllUsers()
         {
             try
             {
-                // Получаем всех пользователей
                 var users = await _userManager.Users.ToListAsync();
-                // Удаляем каждого пользователя
                 foreach (var user in users)
                 {
                     var result = await _userManager.DeleteAsync(user);
                     if (!result.Succeeded)
                     {
-                        // Логируем ошибки, если удаление не удалось
                         var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                         return BadRequest($"Failed to delete user {user.UserName}: {errors}");
                     }
