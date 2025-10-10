@@ -8,6 +8,10 @@ using System.Text;
 
 using Backend.Generators; 
 using Task = System.Threading.Tasks.Task;
+using NLog;
+using NLog.Web;
+
+// Очищаем стандартные провайдеры логирования
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,6 +81,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Logging.ClearProviders();
+builder.Host.UseNLog();
 
 var app = builder.Build();
 

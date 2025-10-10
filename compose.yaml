@@ -9,6 +9,8 @@ services:
       - ConnectionStrings__DefaultConnection=Server=db;Database=TodoListDB;User Id=sa;Password=${DB_SA_PASSWORD};TrustServerCertificate=True;
       - Jwt__Key=${JWT_KEY}
       - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./backend-logs:/app/logs
     depends_on:
       db:
         condition: service_healthy
