@@ -17,6 +17,7 @@
             <td class="bg-gray-100 group-hover:bg-gray-200 px-4 py-3 text-gray-700 font-semibold truncate border-y-2 border-gray-200">
                 {{ item.roles || '—' }}
             </td>
+
             <td class="bg-gray-100 group-hover:bg-gray-200 px-4 py-3 text-gray-700 font-semibold truncate border-y-2 border-gray-200 last:border-r-2 last:rounded-r-xl">
                 {{ item.email || '—' }}
             </td>
@@ -30,11 +31,11 @@ import { ref, onMounted, defineExpose } from 'vue';
 import type { UserData } from '@/types/tables';
 import apiClient from '@/api';
 import AppIcon from '@/components/ui/AppIcon.vue';
+import { useApiAsyncGet } from '@/composables';
 
 const userColumns = ref([
     { key: 'actions', label: '' },
     { key: 'shortName', label: 'ФИО' },
-    // В оригинале у тебя тут была опечатка 'gener', я исправил на 'gender'
     { key: 'gender', label: 'Пол' },
     { key: 'roles', label: 'Роль' },
     { key: 'email', label: 'Email' },
@@ -58,6 +59,7 @@ const fetchUsers = async () => {
                 gender: normalizeGender(user.gender),
                 roles: user.roles[0],
                 email: user.email,
+                registrationTime: user.registrationTime,
             }));
         } else {
             console.error("Ожидался массив, но получен другой тип данных:", usersFromApi);
@@ -70,7 +72,9 @@ const fetchUsers = async () => {
 };
 
 const showUserDetails = (userId: string) => {
-    console.log(`Запрос данных для пользователя с ID: ${userId}`);
+    console.log(`Пользователь ${userId}`)
+    const response = useApiAsyncGet(`/Users/${userId}`)
+    console.log(response)  
 }
 
 onMounted(() => {

@@ -45,7 +45,7 @@ namespace Backend.Controllers
 
         // GET: api/Users/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ApplicationUser>> GetUser(string id) // ID теперь строка
+        public async Task<ActionResult<UserWithRolesDto>> GetUser(string id) 
         {
             var user = await _userManager.FindByIdAsync(id);
 
@@ -54,7 +54,22 @@ namespace Backend.Controllers
                 return NotFound();
             }
 
-            return Ok(user);
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var userWithRoles = new UserWithRolesDto
+            {
+                Id = user.Id,
+                ShortName = user.ShortName,
+                Email = user.Email,
+                Gender = user.Gender,
+                RegistrationTime = user.RegistrationTime,
+                FirstName = user.FirstName,
+                SecondName = user.SecondName,
+                LastName = user.LastName,
+                Roles = roles
+            };
+
+            return Ok(userWithRoles);
         }
 
         // DELETE: api/Users/DeleteAll

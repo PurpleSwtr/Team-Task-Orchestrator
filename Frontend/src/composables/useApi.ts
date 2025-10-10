@@ -12,7 +12,7 @@ export function useApiAsyncDelete(endpoint: string){
             return response
         }
     }
-    apiAsync(endpoint)
+    return apiAsync(endpoint)
 }
 
 export function useApiAsyncGet(endpoint: string){
@@ -22,5 +22,5 @@ export function useApiAsyncGet(endpoint: string){
             return response
         }
     }
-    apiAsync(endpoint)
+    return apiAsync(endpoint)
 }

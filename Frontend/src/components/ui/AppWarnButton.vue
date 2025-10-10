@@ -1,7 +1,7 @@
 <template>
     <button :disabled="props.statusLoading" 
     class="cursor-pointer 
-    bg-red-600 
+    bg-red-500 
     hover:bg-red-700 
     transition-colors 
     rounded-xl 
