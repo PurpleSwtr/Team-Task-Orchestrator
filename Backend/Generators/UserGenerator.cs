@@ -138,6 +138,7 @@ namespace Backend.Generators
 
                 var emailGenerator = new DataGeneratorEmail();
                 string filePath = Path.Combine(AppContext.BaseDirectory, "Generators", "Files", "Emails","users.csv");
+                
                 string email = emailGenerator.GetRandomUsername(filePath);
 
                 string short_first = fullName.FirstName.Substring(0,1); 
@@ -148,10 +149,10 @@ namespace Backend.Generators
                     FirstName = fullName.FirstName,
                     SecondName = fullName.MiddleName,
                     LastName = fullName.LastName,
-                    RegistrationTime = DateTime.UtcNow,
+                    RegistrationTime = DateTime.UtcNow.AddDays(-Random.Shared.Next(0, 365)).AddHours(-Random.Shared.Next(0, 24)),
                     Gender = gender,
                     Email = email,
-                    UserName = email,
+                    UserName = email, 
                     ShortName = $"{fullName.MiddleName} {short_first}.{short_last}."
                 };
 
@@ -161,6 +162,14 @@ namespace Backend.Generators
                 {
                     string randomRole = roles[random.Next(roles.Count)];
                     await userManager.AddToRoleAsync(newUser, randomRole);
+                }
+                else
+                {
+                    Console.WriteLine($"Ошибка при создании пользователя {newUser.Email}:");
+                    foreach (var error in result.Errors)
+                    {
+                        Console.WriteLine($"- {error.Description}");
+                    }
                 }
             }
         }

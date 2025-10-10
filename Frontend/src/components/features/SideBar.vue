@@ -76,6 +76,7 @@
   };
   
   const protectedItems = ref<MenuItem[]>([
+    {message: "Мой аккаунт", route_path: "/account", icon: "account"},
     {message: "Мои задачи", route_path: "/tasks", icon: "tasks"},
     {message: "Пользователи", route_path: "/users", icon: "users"},
     {message: "Команды", route_path: "/teams", icon: "teams"},

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Backend.Models;
 using Backend.Models.DTO;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 
 namespace Backend.Services
 {
@@ -39,8 +40,15 @@ namespace Backend.Services
             {
                 return creationResult;
             }
-
-            var addToRoleResult = await _userManager.AddToRoleAsync(user, "Admin");
+            IdentityResult addToRoleResult;
+            if (model.Email == "admin@admin.ru" && model.Password == "Admin123!")
+            {
+                addToRoleResult = await _userManager.AddToRoleAsync(user, "Admin");
+            }
+            else
+            {
+                addToRoleResult = await _userManager.AddToRoleAsync(user, "User");
+            }
 
             return addToRoleResult; 
         }

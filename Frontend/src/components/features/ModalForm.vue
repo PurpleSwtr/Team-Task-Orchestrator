@@ -4,31 +4,41 @@ import AppButton from '@/components/ui/AppButton.vue';
 import AppIcon from '../ui/AppIcon.vue';
 import AppWarnButton from '../ui/AppWarnButton.vue';
 import { ref, watch } from 'vue';
+import { useApiAsyncPatch } from '@/composables/useApi';
 
 const props = defineProps<{
   userData: UserDataForAdmin | null 
   isOpen: boolean
 }>();
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'update']);
 
 const onClose = () => {
   emit('close'); 
 };
 
-const onChange = () => {
+const onChange = async () => {
   try
   {
-    if(Object.keys(selectedRoles.value).length !== 0) {
-      console.log(selectedRoles.value)
+    if(props.userData && Object.keys(selectedRoles.value).length !== 0) {
+      const payload = {
+        userId: props.userData.id,
+        roles: selectedRoles.value
+      }
+      
+      await useApiAsyncPatch('/Users/ChangeRole', payload);
+      
+      console.log("Роли успешно обновлены!");
+      emit('update');
+      onClose();
     }
     else {
-      throw new Error
+      throw new Error("Данные пользователя отсутствуют или роль не выбрана!")
     }
   }
-  catch
+  catch(error)
   {
-    console.log("Роль не выбрана!")
+    console.error("Ошибка при обновлении ролей:", error)
   }
 };
 

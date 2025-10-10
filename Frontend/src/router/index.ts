@@ -4,18 +4,16 @@ import HomePage from '../views/HomePage.vue'
 import AboutPage from '../views/AboutPage.vue'
 import SettingsPage from '@/views/SettingsPage.vue'
 
-// import LoginPage from '@/views/auth/LoginPage.vue'
-// import RegisterPage from '@/views/auth/RegisterPage.vue'
-
+import AdminPage from '@/views/AdminPage.vue'
 import GeneratorPage from '../views/GeneratorPage.vue'
 import StatisticsPage from '@/views/StatisticsPage.vue'
 
+import AccountPage from '@/views/AccountPage.vue'
 import TasksPage from '@/views/TasksPage.vue'
 import TeamsPage from '@/views/TeamsPage.vue'
 import ProjectsPage from '@/views/ProjectsPage.vue'
 import UsersPage from '@/views/UsersPage.vue'
 import LoginRegisterPage from '@/views/auth/LoginRegisterPage.vue'
-import AdminPage from '@/views/AdminPage.vue'
 
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -23,12 +21,17 @@ export const router = createRouter({
     {
       path: '/',
       component: MainLayout, 
-      children: [ 
+      children: [
         {
           path: '', 
           name: 'home',
           component: HomePage,
         },
+        {
+          path: 'account', 
+          name: 'account',
+          component: AccountPage,
+        }, 
         {
           path: 'about',
           name: 'about',  

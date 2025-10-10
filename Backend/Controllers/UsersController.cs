@@ -74,7 +74,7 @@ namespace Backend.Controllers
 
         // DELETE: api/Users/DeleteAll
         [HttpDelete("DeleteAll")]
-        [Authorize (Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteAllUsers()
         {
             try
@@ -96,7 +96,49 @@ namespace Backend.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-       
+
+        [HttpPatch("ChangeRole")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<UserWithRolesDto>> ChangeUserRole([FromBody] UserRoleDto newRoles)
+        {
+            var user = await _userManager.FindByIdAsync(newRoles.UserId);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            var result = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest("Failed to remove user roles");
+            }
+
+            result = await _userManager.AddToRolesAsync(user, newRoles.Roles);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest("Failed to add user roles");
+            }
+
+            var updatedRoles = await _userManager.GetRolesAsync(user);
+
+            var userWithRoles = new UserWithRolesDto
+            {
+                Id = user.Id,
+                ShortName = user.ShortName,
+                Email = user.Email,
+                Gender = user.Gender,
+                RegistrationTime = user.RegistrationTime,
+                FirstName = user.FirstName,
+                SecondName = user.SecondName,
+                LastName = user.LastName,
+                Roles = updatedRoles
+            };
+
+            return Ok(userWithRoles);
+        }
         // добавить логику создания (POST), обновления (PUT) и удаления (DELETE)
 
     }
