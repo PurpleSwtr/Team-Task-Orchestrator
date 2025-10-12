@@ -67,7 +67,7 @@ watch(() => props.userData, (newUserData) => {
 <template>
   <Transition name="fade">
     <div v-if="isOpen" class="fixed inset-0 backdrop-saturate-100 backdrop-opacity-100 backdrop-blur-sm backdrop-brightness-75 flex items-center justify-center" @click.self="onClose">
-      <div class="bg-gray-50 rounded-2xl shadow-2xl max-w-2xl w-full p-16 mx-4 relative overflow-hidden hover:scale-105 hover:-translate-y-5 duration-300">
+      <!-- <div class="bg-gray-50 rounded-2xl shadow-2xl max-w-2xl w-full p-16 mx-4 relative overflow-hidden hover:scale-105 hover:-translate-y-5 duration-300">
         <template v-if="userData">
                 <div class="flex justify-center -mt-5">
                   <div class="flex items-center justify-center bg-gray-300 w-32 h-32 rounded-full border-0 relative overflow-hidden">
@@ -106,7 +106,7 @@ watch(() => props.userData, (newUserData) => {
             <AppIcon icon_name="miniuser" 
               class="absolute right-25 bottom-32 scale-1800 text-gray-200">
             </AppIcon>
-        </div>
+        </div> -->
     </div>
   </Transition>
 </template>

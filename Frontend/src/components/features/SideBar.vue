@@ -38,11 +38,16 @@
             icon="about"/>
         </li>
       </ul>
-
       <div v-if="auth?.isLoggedIn.value">
         <div class="border-t border-gray-500 my-4"></div>
         <ul>
           <li>
+            <MenuButton 
+              message="Мой аккаунт" 
+              route_path="/account" 
+              icon="account"
+              class="mb-4"
+            />
             <MenuButton 
               message="Настройки" 
               route_path="/settings" 
@@ -76,7 +81,7 @@
   };
   
   const protectedItems = ref<MenuItem[]>([
-    {message: "Мой аккаунт", route_path: "/account", icon: "account"},
+    // {message: "Мой аккаунт", route_path: "/account", icon: "account"},
     {message: "Мои задачи", route_path: "/tasks", icon: "tasks"},
     {message: "Пользователи", route_path: "/users", icon: "users"},
     {message: "Команды", route_path: "/teams", icon: "teams"},
