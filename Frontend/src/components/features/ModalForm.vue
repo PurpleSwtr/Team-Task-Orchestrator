@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import type { UserData, UserDataForAdmin } from '@/types/tables';
-import AppButton from '@/components/ui/AppButton.vue'; 
+import AppButton from '@/components/ui/AppButton.vue';
 import AppIcon from '../ui/AppIcon.vue';
 import AppWarnButton from '../ui/AppWarnButton.vue';
 import { ref, watch } from 'vue';
 import { useApiAsyncPatch } from '@/composables/useApi';
 
 const props = defineProps<{
-  userData: UserDataForAdmin | null 
+  userData: UserDataForAdmin | null
   isOpen: boolean
 }>();
 
 const emit = defineEmits(['close', 'update']);
 
 const onClose = () => {
-  emit('close'); 
+  emit('close');
 };
 
 const onChange = async () => {
@@ -25,9 +25,9 @@ const onChange = async () => {
         userId: props.userData.id,
         roles: selectedRoles.value
       }
-      
+
       await useApiAsyncPatch('/Users/ChangeRole', payload);
-      
+
       console.log("Роли успешно обновлены!");
       emit('update');
       onClose();
@@ -67,7 +67,7 @@ watch(() => props.userData, (newUserData) => {
 <template>
   <Transition name="fade">
     <div v-if="isOpen" class="fixed inset-0 backdrop-saturate-100 backdrop-opacity-100 backdrop-blur-sm backdrop-brightness-75 flex items-center justify-center" @click.self="onClose">
-      <!-- <div class="bg-gray-50 rounded-2xl shadow-2xl max-w-2xl w-full p-16 mx-4 relative overflow-hidden hover:scale-105 hover:-translate-y-5 duration-300">
+      <div class="bg-gray-50 rounded-2xl shadow-2xl max-w-2xl w-full p-16 mx-4 relative overflow-hidden hover:scale-105 hover:-translate-y-5 duration-300">
         <template v-if="userData">
                 <div class="flex justify-center -mt-5">
                   <div class="flex items-center justify-center bg-gray-300 w-32 h-32 rounded-full border-0 relative overflow-hidden">
@@ -83,9 +83,9 @@ watch(() => props.userData, (newUserData) => {
                 <p class="text-gray-600 mb-4">{{userData.gender === 'Male' ? 'Мужчина' : userData.gender === 'Female' ? 'Женщина' : ''}}</p>
                 <p class="text-gray-600 font-bold mt-4 mb-1">Права доступа:</p>
                 <div id="roles" v-for="value in userRoles">
-                  <input 
-                    type="checkbox" 
-                    class="mr-2" 
+                  <input
+                    type="checkbox"
+                    class="mr-2"
                     :value="value.key"
                     :id="value.key"
                     v-model="selectedRoles"
@@ -98,15 +98,15 @@ watch(() => props.userData, (newUserData) => {
             <template v-else>
                  <p class="text-gray-600">Загрузка данных...</p>
             </template>
-            
+
             <div class="flex justify-start mt-10">
               <AppButton message="Закрыть" @click="onClose" />
             </div>
             <AppWarnButton message="Применить изменения" class="mt-3" @click="onChange" />
-            <AppIcon icon_name="miniuser" 
+            <AppIcon icon_name="miniuser"
               class="absolute right-25 bottom-32 scale-1800 text-gray-200">
             </AppIcon>
-        </div> -->
+        </div>
     </div>
   </Transition>
 </template>
