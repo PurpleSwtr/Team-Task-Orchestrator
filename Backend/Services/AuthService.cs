@@ -35,7 +35,7 @@ namespace Backend.Services
                 ShortName = $"{model.SecondName} {model.FirstName[0]}.{(string.IsNullOrEmpty(model.LastName) ? "" : model.LastName[0] + ".")}"
             };
             var creationResult = await _userManager.CreateAsync(user, model.Password);
-
+            Console.WriteLine(model.Password);
             if (!creationResult.Succeeded)
             {
                 return creationResult;

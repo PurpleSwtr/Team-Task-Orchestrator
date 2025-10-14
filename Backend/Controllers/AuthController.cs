@@ -30,7 +30,7 @@ namespace Backend.Controllers
 
             if (result.Succeeded)
             {
-                return Ok(new { Message = "Пользователь создан!" });
+                return Ok(new { Message = $"{result}" });
             }
 
             return BadRequest(result.Errors);
@@ -66,6 +66,7 @@ namespace Backend.Controllers
             Response.Cookies.Delete("jwtToken");
             return Ok(new { Message = "Выход выполнен успешно" });
         }
+
         [HttpGet("me")]
         [Authorize]
         public IActionResult GetCurrentUser()

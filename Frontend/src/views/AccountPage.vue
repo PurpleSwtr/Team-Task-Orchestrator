@@ -34,7 +34,7 @@ onMounted(async () => {
   </div>
 
   <div v-else-if="user" class="bg-gray-50 rounded-2xl shadow-xl max-w-2xl w-full p-16 mx-auto relative overflow-hidden">
-    
+
     <div class="flex justify-center -mt-5">
       <div class="flex items-center justify-center bg-gray-300 w-32 h-32 rounded-full border-0 relative overflow-hidden">
         <AppIcon icon_name="miniuser" class="absolute scale-600 text-white mt-10"></AppIcon>
@@ -59,7 +59,7 @@ onMounted(async () => {
     <p class="text-gray-600 font-bold mt-4">Дата регистрации:</p>
     <p class="text-gray-600 mb-4">{{ new Date(user.registrationTime).toLocaleDateString('ru-RU') }}</p>
 
-    <AppIcon icon_name="miniuser" class="absolute right-25 bottom-32 scale-1800 text-pink-300 "></AppIcon>
+    <AppIcon icon_name="miniuser" class="absolute right-25 bottom-32 scale-1800 text-gray-300 "></AppIcon>
   </div>
 
   <div v-else class="text-center text-red-500">

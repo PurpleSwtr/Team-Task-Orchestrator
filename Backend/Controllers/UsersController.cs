@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
-using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
+using Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
@@ -142,6 +142,22 @@ namespace Backend.Controllers
             return Ok(userWithRoles);
         }
         // добавить логику создания (POST), обновления (PUT) и удаления (DELETE)
+        [HttpGet("{id}/password-hash")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> GetPasswordHash(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound("Пользователь не найден");
+            }
 
+            return Ok(new { 
+                UserId = user.Id,
+                Email = user.Email,
+                PasswordHash = user.PasswordHash,
+                HasPassword = !string.IsNullOrEmpty(user.PasswordHash)
+            });
+        }
     }
 }
