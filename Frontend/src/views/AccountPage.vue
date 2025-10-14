@@ -59,7 +59,7 @@ onMounted(async () => {
     <p class="text-gray-600 font-bold mt-4">Дата регистрации:</p>
     <p class="text-gray-600 mb-4">{{ new Date(user.registrationTime).toLocaleDateString('ru-RU') }}</p>
 
-    <AppIcon icon_name="miniuser" class="absolute right-25 bottom-32 scale-1800 text-gray-200 "></AppIcon>
+    <AppIcon icon_name="miniuser" class="absolute right-25 bottom-32 scale-1800 text-pink-300 "></AppIcon>
   </div>
 
   <div v-else class="text-center text-red-500">
