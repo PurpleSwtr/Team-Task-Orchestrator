@@ -3,61 +3,60 @@
     <div class="text-2xl font-bold mb-10 text-yellow-500">
       Курсач24
     </div>
-    
+
     <nav class="flex flex-col flex-1">
       <ul class="flex-1">
         <li class="mb-4">
-          <MenuButton 
-            message="Главная" 
-            icon="home" 
+          <MenuButton
+            message="Главная"
+            icon="home"
             route_path="/"
           />
         </li>
         <li v-if="!auth?.isLoggedIn.value" class="mb-4">
-          <MenuButton 
-            message="Войти" 
-            icon="login" 
+          <MenuButton
+            message="Войти"
+            icon="login"
             route_path="/login_register"
           />
         </li>
-        
+
         <template v-if="auth?.isLoggedIn.value">
             <li v-for="item in protectedItems" :key="item.route_path" class="mb-4">
-              <MenuButton 
-                :message="item.message" 
-                :icon="item.icon" 
+              <MenuButton
+                :message="item.message"
+                :icon="item.icon"
                 :route_path="item.route_path"
               />
             </li>
         </template>
-        
+
         <li v-if="!auth?.isLoggedIn.value" class="mb-4">
-            <MenuButton 
-            message="О проекте" 
-            route_path="/about" 
+            <MenuButton
+            message="О проекте"
+            route_path="/about"
             icon="about"/>
         </li>
       </ul>
-
       <div v-if="auth?.isLoggedIn.value">
         <div class="border-t border-gray-500 my-4"></div>
         <ul>
           <li>
-            <MenuButton 
-              message="Мой аккаунт" 
-              route_path="/account" 
+            <MenuButton
+              message="Мой аккаунт"
+              route_path="/account"
               icon="account"
               class="mb-4"
             />
-            <MenuButton 
-              message="Настройки" 
-              route_path="/settings" 
+            <MenuButton
+              message="Настройки"
+              route_path="/settings"
               icon="settings"
               class="mb-4"
             />
-            <MenuButton 
-              message="Выйти" 
-              route_path="#" 
+            <MenuButton
+              message="Выйти"
+              route_path="#"
               icon="logout"
               @click.prevent="handleLogout"
             />
@@ -76,12 +75,13 @@
   import apiClient from '@/api';
 
   const router = useRouter();
-  const auth = inject('auth') as { 
-    isLoggedIn: Ref<boolean>; 
+  const auth = inject('auth') as {
+    isLoggedIn: Ref<boolean>;
     setLoggedOut: () => void;
   };
-  
+
   const protectedItems = ref<MenuItem[]>([
+    // {message: "Мой аккаунт", route_path: "/account", icon: "account"},
     {message: "Мои задачи", route_path: "/tasks", icon: "tasks"},
     {message: "Пользователи", route_path: "/users", icon: "users"},
     {message: "Команды", route_path: "/teams", icon: "teams"},

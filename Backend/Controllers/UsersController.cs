@@ -79,7 +79,9 @@ namespace Backend.Controllers
         {
             try
             {
-                var users = await _userManager.Users.ToListAsync();
+                var users = await _userManager.Users
+                .Where(x => x.Email != "admin@admin.ru")
+                .ToListAsync();
                 foreach (var user in users)
                 {
                     var result = await _userManager.DeleteAsync(user);
