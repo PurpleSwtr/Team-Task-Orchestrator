@@ -1,5 +1,5 @@
 ![C#](https://img.shields.io/badge/C%23-239120.svg?logo=c-sharp&logoColor=white)
-![ASP.NET](https://img.shields.io/badge/ASP.NET%20Identity-512BD4?logo=.net&logoColor=white)
+![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-512BD4?logo=dotnet&logoColor=white)
 ![Entity Framework Core](https://img.shields.io/badge/Entity%20Framework%20Core-512BD4?logo=c-sharp&logoColor=white)
 ![VueJS](https://img.shields.io/badge/Vue.js-35495e.svg?logo=vue.js&logoColor=4FC08D)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC.svg?logo=typescript&logoColor=white)

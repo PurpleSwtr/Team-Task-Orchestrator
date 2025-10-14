@@ -1,12 +1,13 @@
 <template>
     <AppWarnButton message="Удалить всех пользователей" @click="delAllUsers" :statusLoading="isLoading"></AppWarnButton>
     <AdminPanel ref="adminPanelRef" @show-user-details="handleShowUserDetails" class="mt-7"/>
-    <ModalForm 
-        :is-open="isModalOpen" 
-        :user-data="selectedUser" 
+    <ModalForm
+        :is-open="isModalOpen"
+        :user-data="selectedUser"
         @close="isModalOpen = false"
         @update="refreshUsersData"
     />
+    <!-- <BaseModal :is-open="isModalOpen"></BaseModal> -->
 </template>
 
 <script setup lang="ts">
@@ -14,6 +15,7 @@ import apiClient from '@/api';
 import AdminPanel from '@/components/features/Datasets/AdminPanel.vue';
 import ModalForm from '@/components/features/ModalForm.vue';
 import AppWarnButton from '@/components/ui/AppWarnButton.vue';
+import BaseModal from '@/components/ui/BaseModal.vue';
 import { useApiAsyncDelete } from '@/composables/useApi';
 import { ref } from 'vue';
 
@@ -28,7 +30,7 @@ const delAllUsers = async () => {
 }
 
 const isModalOpen = ref(false);
-const selectedUser = ref(null); 
+const selectedUser = ref(null);
 
 const handleShowUserDetails = async (userId: string) => {
     try {
