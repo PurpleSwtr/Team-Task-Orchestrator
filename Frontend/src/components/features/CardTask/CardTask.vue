@@ -75,7 +75,7 @@ const statusTask = reactive({
     title: "Не начата",
     bg_color: "bg-amber-300",
     shadow_color: "shadow-amber-400",
-    icon_color: "text-orange-300",
+    icon_color: "text-orange-400",
     icon_name: "task",
   },
     "process": {
