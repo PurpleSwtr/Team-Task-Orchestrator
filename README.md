@@ -17,10 +17,7 @@
 ## Корпоративная система управления задачами
 ### Приложение было разработано для управления проектами и задачами предприятия.
 
-<video controls width="800" style="max-width:100%;">
-  <source src="/PurpleSwtr/todoproj/-/blob/master/assets/presentation.mp4" type="video/mp4">
-  Видео
-</video>
+https://github.com/PurpleSwtr/TeamTaskOrchestrator/issues/1
 
 Когда-нибудь тут нужно написать крутое ридми...
 
