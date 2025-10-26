@@ -17,7 +17,10 @@
 ## Корпоративная система управления задачами
 ### Приложение было разработано для управления проектами и задачами предприятия.
 
-[Посмотреть видео](assets/presentation.mp4)
+<video controls width="800" style="max-width:100%;">
+  <source src="/PurpleSwtr/todoproj/-/blob/master/assets/presentation.mp4" type="video/mp4">
+  Видео
+</video>
 
 Когда-нибудь тут нужно написать крутое ридми...
 
