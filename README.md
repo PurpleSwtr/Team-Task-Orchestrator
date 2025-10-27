@@ -17,7 +17,7 @@
 ## Корпоративная система управления задачами
 ### Приложение было разработано для управления проектами и задачами предприятия.
 
-![Preview](https://github.com/PurpleSwtr/TeamTaskOrchestrator/issues/1#issue-3554397671)
+https://github.com/user-attachments/assets/7ab3ca9a-baea-4711-8ada-120a7a580663
 
 Когда-нибудь тут нужно написать крутое ридми...
 
