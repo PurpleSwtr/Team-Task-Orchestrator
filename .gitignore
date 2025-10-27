@@ -12,6 +12,8 @@
 
 Backend/bin/
 Backend/obj/
+Backend/Migrations/
+
 Backend/Generators/Files
 Backend/appsettings.Development.json
 
