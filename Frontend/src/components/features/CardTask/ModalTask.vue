@@ -30,9 +30,6 @@ const onQuestionClick = () => {
     <div class="flex-1 p-15 overflow-y-auto min-w-0 tracking-wide text-pretty">
       <h1 class="text-3xl font-bold">{{props.title}}</h1>
       <p class="pt-5 text-xl font-normal">Описае Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание </p>
-
-
-
   </div>
     <div class="relative h-full bg-amber-500 saturate-50 overflow-hidden flex-shrink-0 duration-500"
     :class="[w_side]">
