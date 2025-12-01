@@ -84,6 +84,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

@@ -1,83 +1,76 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Backend.Interfaces;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+
 namespace Backend.Models;
 
 public partial class TodoListDbContext : IdentityDbContext<ApplicationUser>
 {
-    public TodoListDbContext(DbContextOptions<TodoListDbContext> options)
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public TodoListDbContext(DbContextOptions<TodoListDbContext> options, IHttpContextAccessor httpContextAccessor = null)
         : base(options)
     {
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public virtual DbSet<Project> Projects { get; set; }
-
     public virtual DbSet<Status> Statuses { get; set; }
-
     public virtual DbSet<Task> Tasks { get; set; }
-
     public virtual DbSet<TasksProject> TasksProjects { get; set; }
-
     public virtual DbSet<TasksUser> TasksUsers { get; set; }
-
     public virtual DbSet<Team> Teams { get; set; }
-
     public virtual DbSet<UsersCommand> UsersCommands { get; set; }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var currentUserId = _httpContextAccessor?.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        foreach (var entry in ChangeTracker.Entries<IAuditable>())
+        {
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    entry.Entity.CreatedAt = DateTime.UtcNow;
+                    entry.Entity.CreatedBy = currentUserId;
+                    break;
+
+                case EntityState.Modified:
+                    entry.Entity.UpdatedAt = DateTime.UtcNow;
+                    entry.Entity.UpdatedBy = currentUserId;
+                    break;
+
+                case EntityState.Deleted:
+                    entry.State = EntityState.Modified;
+                    entry.Entity.DeletedAt = DateTime.UtcNow;
+                    entry.Entity.UpdatedBy = currentUserId;
+                    break;
+            }
+        }
+
+        return base.SaveChangesAsync(cancellationToken);
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Project>(entity =>
-        {
-            entity.HasKey(e => e.IdProject).HasName("PK_Проекты");
-
-            entity.Property(e => e.IdProject).HasColumnName("id_project");
-            entity.Property(e => e.CreatedAt)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("created_at");
-            entity.Property(e => e.CreatedBy)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("created_by");
-            entity.Property(e => e.Descryption).HasColumnName("descryption");
-            entity.Property(e => e.EditedAt)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("edited_at");
-            entity.Property(e => e.EditedBy)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("edited_by");
-            entity.Property(e => e.EndDate)
-                .HasColumnType("datetime")
-                .HasColumnName("end_date");
-            entity.Property(e => e.IdTeam).HasColumnName("id_team");
-            entity.Property(e => e.Notes)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .HasColumnName("notes");
-            entity.Property(e => e.ProjectName)
-                .HasMaxLength(255)
-                .HasColumnName("project_name");
-            entity.Property(e => e.ProjectType)
-                .HasMaxLength(255)
-                .HasColumnName("project_type");
-            entity.Property(e => e.StartDate)
-                .HasColumnType("datetime")
-                .HasColumnName("start_date");
-        });
+        modelBuilder.Entity<Project>().HasQueryFilter(e => e.DeletedAt == null);
+        modelBuilder.Entity<Task>().HasQueryFilter(e => e.DeletedAt == null);
+        modelBuilder.Entity<Team>().HasQueryFilter(e => e.DeletedAt == null);
 
         modelBuilder.Entity<Status>(entity =>
         {
             entity.HasKey(e => e.IdStatus).HasName("PK_Статус");
-
             entity.ToTable("Status");
-
             entity.Property(e => e.IdStatus).HasColumnName("id-status");
-            entity.Property(e => e.Название).HasMaxLength(255);
         });
 
         modelBuilder.Entity<Task>(entity =>
@@ -98,12 +91,6 @@ public partial class TodoListDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
                 .HasColumnName("description");
-            entity.Property(e => e.EditedAt)
-                .HasColumnType("datetime")
-                .HasColumnName("edited_at");
-            entity.Property(e => e.EditedBy)
-                .HasMaxLength(50)
-                .HasColumnName("edited_by");
             entity.Property(e => e.IdProject).HasColumnName("id_project");
             entity.Property(e => e.Notes)
                 .HasMaxLength(50)
@@ -169,19 +156,11 @@ public partial class TodoListDbContext : IdentityDbContext<ApplicationUser>
             entity.HasKey(e => e.IdTeam).HasName("PK_Команды");
 
             entity.Property(e => e.IdTeam).HasColumnName("id_team");
-            entity.Property(e => e.CratedBy)
-                .HasMaxLength(255)
-                .HasColumnName("crated_by");
+
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
             entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.EditedAt)
-                .HasMaxLength(255)
-                .HasColumnName("edited_at");
-            entity.Property(e => e.EditedBy)
-                .HasMaxLength(255)
-                .HasColumnName("edited_by");
             entity.Property(e => e.Notes).HasColumnName("notes");
             entity.Property(e => e.TeamName)
                 .HasMaxLength(255)

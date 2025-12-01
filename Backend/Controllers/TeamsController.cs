@@ -41,7 +41,7 @@ namespace Backend.Controllers
                 TeamName = teamDto.TeamName,
                 Description = teamDto.Description,
                 CreatedAt = DateTime.UtcNow,
-                CratedBy = userId // ВАЖНО: У вас в модели опечатка "CratedBy"
+                CreatedBy = userId
             };
 
             _context.Teams.Add(newTeam);
