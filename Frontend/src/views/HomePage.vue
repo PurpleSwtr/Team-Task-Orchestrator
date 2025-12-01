@@ -1,7 +1,7 @@
 <template>
   <AppButton message='Создать задачу' :statusLoading="buttonLoading" @click="addTask"></AppButton>
 
-  <TransitionGroup name="fade" tag="div" class="grid grid-cols-4">
+  <TransitionGroup name="fade" tag="div" class="grid grid-cols-3">
     <CardTask
       v-for="task in tasks"
       :key="task.id"
