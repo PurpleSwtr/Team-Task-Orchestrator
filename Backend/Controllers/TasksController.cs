@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Task = Backend.Models.Task;
-
+using System.Security.Claims; // Не забудь добавить
 
 namespace Backend.Controllers
 {
@@ -76,11 +76,43 @@ namespace Backend.Controllers
             return NoContent();
         }
 
-        // POST: api/Tasks
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // Назначить исполнителя (Это будет новый метод)
+        [HttpPost("{taskId}/assign/{userId}")]
+        [Authorize(Roles = "Moderator,Teamlead,Admin")]
+        public async Task<IActionResult> AssignUser(int taskId, string userId)
+        {
+            var task = await _context.Tasks.FindAsync(taskId);
+            if (task == null) return NotFound();
+
+            // Проверяем, существует ли уже такая связь
+            bool exists = await _context.TasksUsers
+                .AnyAsync(tu => tu.IdTask == taskId && tu.IdUser == userId);
+
+            if (exists) return BadRequest("Пользователь уже назначен на эту задачу.");
+
+            var link = new TasksUser
+            {
+                IdTask = taskId,
+                IdUser = userId,
+                IdAssignees = Guid.NewGuid().ToString() // Твой PK в таблице - строка
+            };
+
+            _context.TasksUsers.Add(link);
+            await _context.SaveChangesAsync();
+
+            return Ok("Исполнитель назначен");
+        }
+
+
+        // Создать задачу - Модератор, Тимлид, Админ
         [HttpPost]
+        [Authorize(Roles = "Moderator,Teamlead,Admin")]
         public async Task<ActionResult<Task>> PostTask(Task task)
         {
+            // При создании задачи нужно знать ID создателя (это уже делает наш DbContext)
+            // Но нужно еще проверить, чтобы Модератор не создавал задачу в чужом проекте (это advanced уровень)
+            // Пока ограничимся проверкой роли.
+
             _context.Tasks.Add(task);
             await _context.SaveChangesAsync();
 
@@ -102,6 +134,33 @@ namespace Backend.Controllers
 
 
             return NoContent();
+        }
+
+        // Смена статуса - Доступно ВСЕМ (но с логикой)
+        [HttpPatch("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] string newStatus)
+        {
+            var task = await _context.Tasks.FindAsync(id);
+            if (task == null) return NotFound();
+
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
+
+            // Пример логики ограничений
+            if (userRole == "User")
+            {
+                // Пользователь не может перевести задачу в статус "Завершена" (finished), 
+                // только в "Ожидает проверки" (waiting)
+                if (newStatus == "finished") 
+                {
+                    return Forbid("Пользователь не может завершать задачи. Отправьте на проверку.");
+                }
+            }
+
+            task.Status = newStatus;
+            // task.UpdatedAt обновится само
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Статус обновлен", status = newStatus });
         }
 
         private bool TaskExists(int id)

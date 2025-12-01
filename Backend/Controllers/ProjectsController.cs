@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
-using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+
 namespace Backend.Controllers
 {
     [Route("api/[controller]")]
@@ -21,30 +18,38 @@ namespace Backend.Controllers
             _context = context;
         }
 
-        // GET: api/Projects
+        // GET: api/Projects?teamId=5 (Если teamId не передан, вернет все доступные)
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Project>>> GetProjects()
+        public async Task<ActionResult<IEnumerable<Project>>> GetProjects([FromQuery] int? teamId)
         {
-            return await _context.Projects.ToListAsync();
-        }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        // GET: api/Projects/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Project>> GetProject(int id)
-        {
-            var project = await _context.Projects.FindAsync(id);
+            IQueryable<Project> query = _context.Projects;
 
-            if (project == null)
+            if (teamId.HasValue)
             {
-                return NotFound();
+                // Вернуть проекты конкретной команды
+                // (Стоит добавить проверку, имеет ли юзер доступ к этой команде)
+                query = query.Where(p => p.IdTeam == teamId.Value);
+            }
+            else
+            {
+                // Вернуть ВСЕ проекты тех команд, в которых состоит юзер
+                // Это сложный запрос: Выбрать проекты, где IdTeam содержится в списке команд юзера
+                var myTeamIds = _context.UsersCommands
+                    .Where(uc => uc.IdUser == userId)
+                    .Select(uc => uc.IdTeam);
+
+                query = query.Where(p => myTeamIds.Contains(p.IdTeam.Value));
             }
 
-            return project;
+            return await query.ToListAsync();
         }
 
         // PUT: api/Projects/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
+        [Authorize(Roles = "Moderator,Teamlead,Admin")] // <---
         public async Task<IActionResult> PutProject(int id, Project project)
         {
             if (id != project.IdProject)
@@ -74,18 +79,35 @@ namespace Backend.Controllers
         }
 
         // POST: api/Projects
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [Authorize(Roles = "Teamlead,Admin")] // <---
         public async Task<ActionResult<Project>> PostProject(Project project)
         {
+            // Важно: Фронт должен передавать IdTeam в теле запроса!
+            if (project.IdTeam == null || project.IdTeam == 0)
+            {
+                return BadRequest("Проект должен быть привязан к команде (IdTeam обязателен).");
+            }
+
+            // Проверка: состоит ли создатель в этой команде?
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            bool access = await _context.UsersCommands
+                .AnyAsync(uc => uc.IdTeam == project.IdTeam && uc.IdUser == userId);
+            
+            if (!access && !User.IsInRole("Admin")) 
+            {
+                return Forbid("Вы не состоите в этой команде и не можете создавать для нее проекты.");
+            }
+
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetProject", new { id = project.IdProject }, project);
+            return CreatedAtAction("GetProjects", new { id = project.IdProject }, project);
         }
 
         // DELETE: api/Projects/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Teamlead,Admin")] // <---
         public async Task<IActionResult> DeleteProject(int id)
         {
             var project = await _context.Projects.FindAsync(id);

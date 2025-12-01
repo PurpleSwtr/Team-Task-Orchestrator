@@ -1,11 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using System.Threading.Tasks;
-using Backend.Models; // <-- Важно: добавляем using для доступа к вашим моделям
-using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Collections.Generic;
+using Backend.Models;
+using System.Security.Claims;
 
 namespace Backend.Controllers
 {
@@ -15,100 +12,114 @@ namespace Backend.Controllers
     public class TeamsController : ControllerBase
     {
         private readonly TodoListDbContext _context;
-        
+
         public TeamsController(TodoListDbContext context)
         {
             _context = context;
         }
 
-        // POST: api/teams
-        /// <summary>
-        /// Создает новую команду. Доступно только для Тимлидов и Администраторов.
-        /// </summary>
+        // 1. ПОЛУЧИТЬ МОИ КОМАНДЫ
+        [HttpGet("my")]
+        public async Task<ActionResult<IEnumerable<Team>>> GetMyTeams()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // Ищем команды, где есть этот пользователь через связующую таблицу UsersCommands
+            var teams = await _context.Teams
+                .Where(t => t.UsersCommands.Any(uc => uc.IdUser == userId))
+                .ToListAsync();
+
+            return Ok(teams);
+        }
+
+        // 2. СОЗДАТЬ КОМАНДУ (И СРАЗУ ВСТУПИТЬ В НЕЕ)
         [HttpPost]
-        [Authorize(Roles = "Teamlead,Admin")]
+        [Authorize(Roles = "Teamlead,Admin")] // <--- Добавили ограничение
         public async Task<ActionResult<Team>> CreateTeam([FromBody] TeamCreateDto teamDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var newTeam = new Team
             {
                 TeamName = teamDto.TeamName,
                 Description = teamDto.Description,
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = userId
+                // Поля CreatedAt и CreatedBy заполнятся сами через наш новый DbContext!
             };
 
-            _context.Teams.Add(newTeam);
-            await _context.SaveChangesAsync();
+            // Используем транзакцию, чтобы создать и команду, и связь одновременно
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    _context.Teams.Add(newTeam);
+                    await _context.SaveChangesAsync(); // Сначала сохраняем, чтобы получить ID команды
+
+                    // Автоматически добавляем создателя в команду
+                    var memberLink = new UsersCommand
+                    {
+                        IdUser = userId,
+                        IdTeam = newTeam.IdTeam
+                    };
+                    _context.UsersCommands.Add(memberLink);
+                    await _context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+                }
+                catch (Exception)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
 
             return CreatedAtAction(nameof(GetTeamById), new { id = newTeam.IdTeam }, newTeam);
         }
 
-        // GET: api/teams/{id}
-        /// <summary>
-        /// Получает информацию о команде по ее ID.
-        /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<Team>> GetTeamById(int id)
         {
-            var team = await _context.Teams.FindAsync(id);
+            var team = await _context.Teams
+                .Include(t => t.UsersCommands) // Подгружаем участников
+                .ThenInclude(uc => uc.IdUserNavigation) // Подгружаем данные юзеров (имена и т.д.)
+                .FirstOrDefaultAsync(t => t.IdTeam == id);
 
-            if (team == null)
-            {
-                return NotFound($"Команда с ID {id} не найдена.");
-            }
+            if (team == null) return NotFound("Команда не найдена.");
 
-            // В будущем здесь можно добавить проверку, состоит ли текущий пользователь в этой команде
-            
+            // Тут можно добавить проверку доступа (состоит ли юзер в этой команде)
+
             return Ok(team);
         }
 
-        // POST: api/teams/{teamId}/users
-        /// <summary>
-        /// Добавляет пользователя в команду. Доступно Тимлиду (этой команды) и Админу.
-        /// </summary>
-        [HttpPost("{teamId}/users")]
-        [Authorize(Roles = "Teamlead,Admin")]
-        public async Task<IActionResult> AddUserToTeam(int teamId, [FromBody] UserToTeamDto dto)
+        // 3. ДОБАВИТЬ ПОЛЬЗОВАТЕЛЯ В КОМАНДУ
+        [HttpPost("{teamId}/add-member")]
+        [Authorize(Roles = "Teamlead,Admin")] // <--- Добавили ограничение
+        public async Task<IActionResult> AddMember(int teamId, [FromBody] string emailToAdd)
         {
+            // 1. Ищем пользователя по Email
+            var userToAdd = await _context.Users.FirstOrDefaultAsync(u => u.Email == emailToAdd);
+            if (userToAdd == null) return NotFound("Пользователь с таким Email не найден.");
+
+            // 2. Проверяем, существует ли команда
             var team = await _context.Teams.FindAsync(teamId);
-            if (team == null)
-            {
-                return NotFound("Команда не найдена.");
-            }
+            if (team == null) return NotFound("Команда не найдена.");
 
-            var user = await _context.Users.FindAsync(dto.UserId);
-            if (user == null)
-            {
-                return NotFound("Пользователь не найден.");
-            }
-
-            // Проверка, что пользователь еще не в команде
-            var userExists = await _context.UsersCommands
-                .AnyAsync(uc => uc.IdTeam == teamId && uc.IdUser == dto.UserId);
-
-            if (userExists)
-            {
-                return BadRequest("Пользователь уже состоит в этой команде.");
-            }
+            // 3. Проверяем, не состоит ли он уже там
+            bool alreadyInTeam = await _context.UsersCommands
+                .AnyAsync(uc => uc.IdTeam == teamId && uc.IdUser == userToAdd.Id);
             
-            var userCommand = new UsersCommand
+            if (alreadyInTeam) return BadRequest("Пользователь уже в команде.");
+
+            // 4. Добавляем
+            var link = new UsersCommand
             {
-                IdUser = dto.UserId,
-                IdTeam = teamId
+                IdTeam = teamId,
+                IdUser = userToAdd.Id
             };
 
-            _context.UsersCommands.Add(userCommand);
+            _context.UsersCommands.Add(link);
             await _context.SaveChangesAsync();
 
-            return Ok("Пользователь успешно добавлен в команду.");
+            return Ok(new { Message = "Пользователь успешно добавлен", User = userToAdd.ShortName });
         }
     }
 }
-

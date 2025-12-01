@@ -5,7 +5,7 @@
     {
       "label": "Run Docker in Background",
       "type": "shell",
-      "command": "docker compose up -d",
+      "command": "docker compose up -d --build",
       "presentation": {
         "group": "group1",
         "panel": "dedicated",
