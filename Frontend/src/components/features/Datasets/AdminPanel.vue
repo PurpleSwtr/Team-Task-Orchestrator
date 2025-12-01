@@ -1,5 +1,5 @@
 <template>
-    <TableForm 
+    <TableForm
         class="flex-1"
         :items="users"
         :columns="userColumns"
@@ -31,11 +31,10 @@ import TableForm from '@/components/features/Table/TableForm.vue';
 import { ref, onMounted, defineExpose } from 'vue';
 import type { UserDataForAdmin } from '@/types/tables';
 import apiClient from '@/api';
-import AppIcon from '@/components/ui/AppIcon.vue'; 
+import AppIcon from '@/components/ui/AppIcon.vue';
 const emit = defineEmits(['showUserDetails']);
 
 const showUserDetails = (userId: string) => {
-
     emit('showUserDetails', userId);
 }
 const userColumns = ref([
@@ -43,15 +42,13 @@ const userColumns = ref([
     { key: 'shortName', label: 'ФИО' },
     { key: 'gender', label: 'Пол' },
     { key: 'roles', label: 'Роль' },
-    
-
     { key: 'email', label: 'Email' },
 ]);
 
 const users = ref<UserDataForAdmin[]>([]);
 const isLoading = ref(false);
 
-const normalizeGender = (gender: string): string => 
+const normalizeGender = (gender: string): string =>
   gender === 'Male' ? 'М' : gender === 'Female' ? 'Ж' : '';
 
 const fetchUsers = async () => {

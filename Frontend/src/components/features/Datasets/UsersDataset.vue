@@ -1,5 +1,5 @@
 <template>
-    <TableForm 
+    <TableForm
         class="flex-1"
         :items="users"
         :columns="userColumns"
@@ -44,7 +44,7 @@ const userColumns = ref([
 const users = ref<UserData[]>([]);
 const isLoading = ref(false);
 
-const normalizeGender = (gender: string): string => 
+const normalizeGender = (gender: string): string =>
   gender === 'Male' ? 'М' : gender === 'Female' ? 'Ж' : '';
 
 const fetchUsers = async () => {
@@ -71,10 +71,14 @@ const fetchUsers = async () => {
     }
 };
 
+const emit = defineEmits(['showUserDetails']);
+
 const showUserDetails = (userId: string) => {
-    console.log(`Пользователь ${userId}`)
-    const response = useApiAsyncGet(`/Users/${userId}`)
-    console.log(response)  
+  console.log(`Пользователь ${userId}`)
+  const response = useApiAsyncGet(`/Users/${userId}`)
+  console.log(response)
+  emit('showUserDetails', userId);
+
 }
 
 onMounted(() => {
